@@ -1,0 +1,165 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "state": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["online", "offline"]
+        },
+        "last_online_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "selected_offline": {
+          "type": "string"
+        },
+        "volume": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "muted": {
+          "type": "boolean"
+        },
+        "stick_offline_until_manual": {
+          "type": "boolean"
+        },
+        "playlists": {
+          "type": "object",
+          "patternProperties": {
+            "^[a-zA-Z0-9_-]+$": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "active_playlist": {
+          "type": "string"
+        },
+        "show_status_overlay": {
+          "type": "boolean"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": ["mode", "volume", "muted", "version"],
+      "additionalProperties": false
+    },
+    "policy": {
+      "type": "object",
+      "properties": {
+        "network": {
+          "type": "object",
+          "properties": {
+            "check_interval": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "check_timeout": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "check_endpoints": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uri"
+              },
+              "minItems": 1
+            },
+            "exponential_backoff": {
+              "type": "boolean"
+            },
+            "max_backoff": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "stick_to_offline_until_manual": {
+              "type": "boolean"
+            }
+          },
+          "required": ["check_interval", "check_timeout", "check_endpoints"],
+          "additionalProperties": false
+        },
+        "display": {
+          "type": "object",
+          "properties": {
+            "idle_dim_minutes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "screensaver_disabled": {
+              "type": "boolean"
+            },
+            "cec_enabled": {
+              "type": "boolean"
+            },
+            "show_clock": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "youtube": {
+          "type": "object",
+          "properties": {
+            "frontend_base": {
+              "oneOf": [
+                {"type": "null"},
+                {"type": "string", "format": "uri"}
+              ]
+            },
+            "quality_preference": {
+              "type": "string",
+              "enum": ["720p", "1080p", "1440p", "2160p"]
+            },
+            "cache_embeds": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "security": {
+          "type": "object",
+          "properties": {
+            "pin_required": {
+              "type": "boolean"
+            },
+            "https_enabled": {
+              "type": "boolean"
+            },
+            "rate_limit_per_minute": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        "system": {
+          "type": "object",
+          "properties": {
+            "max_chromium_memory_mb": {
+              "type": "integer",
+              "minimum": 256
+            },
+            "log_rotation_days": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "thumbnail_generation": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": ["network"],
+      "additionalProperties": false
+    }
+  }
+}

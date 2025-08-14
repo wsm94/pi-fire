@@ -1,0 +1,35 @@
+{
+  "network": {
+    "check_interval": 5,
+    "check_timeout": 2,
+    "check_endpoints": [
+      "https://clients3.google.com/generate_204",
+      "https://1.1.1.1/",
+      "https://8.8.8.8/"
+    ],
+    "exponential_backoff": true,
+    "max_backoff": 60,
+    "stick_to_offline_until_manual": false
+  },
+  "display": {
+    "idle_dim_minutes": 0,
+    "screensaver_disabled": true,
+    "cec_enabled": true,
+    "show_clock": false
+  },
+  "youtube": {
+    "frontend_base": null,
+    "quality_preference": "1080p",
+    "cache_embeds": true
+  },
+  "security": {
+    "pin_required": false,
+    "https_enabled": false,
+    "rate_limit_per_minute": 60
+  },
+  "system": {
+    "max_chromium_memory_mb": 1024,
+    "log_rotation_days": 7,
+    "thumbnail_generation": true
+  }
+}

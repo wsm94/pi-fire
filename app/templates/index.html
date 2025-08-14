@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fireplace Control</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .status {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ff6b35;
+        }
+        
+        .controls {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .control-group {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .control-group h3 {
+            margin-top: 0;
+            color: #ff6b35;
+        }
+        
+        .mode-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        button {
+            background: #ff6b35;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background: #e55a2b;
+        }
+        
+        button.active {
+            background: #d14d20;
+        }
+        
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        
+        input[type="text"], input[type="url"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            background: #333;
+            color: #fff;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            margin: 10px 0;
+        }
+        
+        .presets {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .preset-btn {
+            background: #444;
+            color: #fff;
+            border: 1px solid #666;
+            padding: 15px;
+            text-align: left;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .preset-btn:hover {
+            background: #555;
+        }
+        
+        .preset-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .preset-desc {
+            font-size: 12px;
+            color: #ccc;
+        }
+        
+        .video-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #444;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .video-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #444;
+            cursor: pointer;
+        }
+        
+        .video-item:hover {
+            background: #333;
+        }
+        
+        .video-item.selected {
+            background: #ff6b35;
+        }
+        
+        .video-name {
+            font-weight: bold;
+        }
+        
+        .video-size {
+            font-size: 12px;
+            color: #ccc;
+        }
+        
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .message {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .success {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .error {
+            background: #f44336;
+            color: white;
+        }
+        
+        .current-info {
+            font-size: 14px;
+            color: #ccc;
+            margin: 10px 0;
+        }
+        
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔥 Fireplace Control</h1>
+    </div>
+    
+    <div class="status">
+        <h3>Current Status</h3>
+        <div class="current-info">
+            <strong>Mode:</strong> <span id="current-mode">{{ state.mode|title }}</span><br>
+            <strong>Volume:</strong> <span id="current-volume">{{ state.volume }}%</span>
+            <span id="mute-status">{% if state.muted %}(Muted){% endif %}</span><br>
+            {% if state.mode == 'online' and state.last_online_url %}
+                <strong>URL:</strong> <span id="current-url">{{ state.last_online_url }}</span>
+            {% elif state.mode == 'offline' and state.selected_offline %}
+                <strong>Video:</strong> <span id="current-video">{{ state.selected_offline }}</span>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div id="message-container"></div>
+    
+    <div class="controls">
+        <div class="control-group">
+            <h3>Mode Control</h3>
+            <div class="mode-buttons">
+                <button id="online-btn" onclick="setMode('online')" 
+                        {% if state.mode == 'online' %}class="active"{% endif %}>
+                    📺 Online (YouTube)
+                </button>
+                <button id="offline-btn" onclick="setMode('offline')" 
+                        {% if state.mode == 'offline' %}class="active"{% endif %}>
+                    💾 Offline (Local Videos)
+                </button>
+            </div>
+        </div>
+        
+        <div class="control-group" id="online-controls" 
+             {% if state.mode != 'online' %}style="display: none;"{% endif %}>
+            <h3>YouTube Control</h3>
+            <input type="url" id="youtube-url" placeholder="Paste YouTube URL here..." 
+                   value="{{ state.last_online_url or '' }}">
+            <button onclick="setYouTubeURL()">Set URL</button>
+            
+            <h4>Presets</h4>
+            <div class="presets">
+                {% for preset in presets %}
+                <div class="preset-btn" onclick="setPreset('{{ preset.url }}')">
+                    <div class="preset-title">{{ preset.name }}</div>
+                    <div class="preset-desc">{{ preset.description }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="control-group" id="offline-controls" 
+             {% if state.mode != 'offline' %}style="display: none;"{% endif %}>
+            <h3>Local Videos</h3>
+            <div class="video-list" id="video-list">
+                {% for video in videos %}
+                <div class="video-item {% if video.filename == state.selected_offline %}selected{% endif %}" 
+                     onclick="selectVideo('{{ video.filename }}')">
+                    <div>
+                        <div class="video-name">{{ video.filename }}</div>
+                        <div class="video-size">{{ "%.1f"|format(video.size / 1024 / 1024) }} MB</div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% if not videos %}
+                <div class="video-item">
+                    <div class="video-name">No videos found</div>
+                    <div class="video-size">Add videos to /opt/fireplace/videos/</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <h3>Audio Control</h3>
+            <div class="volume-container">
+                <button onclick="toggleMute()" id="mute-btn">
+                    {% if state.muted %}🔇 Unmute{% else %}🔊 Mute{% endif %}
+                </button>
+                <input type="range" id="volume-slider" min="0" max="100" 
+                       value="{{ state.volume }}" onchange="setVolume(this.value)">
+                <span id="volume-display">{{ state.volume }}%</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentState = {{ state | tojsonfilter }};
+        
+        function showMessage(message, type = 'success') {
+            const container = document.getElementById('message-container');
+            const div = document.createElement('div');
+            div.className = `message ${type}`;
+            div.textContent = message;
+            container.appendChild(div);
+            
+            setTimeout(() => {
+                container.removeChild(div);
+            }, 3000);
+        }
+        
+        function setLoading(loading) {
+            document.body.classList.toggle('loading', loading);
+        }
+        
+        async function apiCall(endpoint, data) {
+            setLoading(true);
+            try {
+                const response = await fetch(`/api/${endpoint}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    return result;
+                } else {
+                    throw new Error(result.error || 'Request failed');
+                }
+            } finally {
+                setLoading(false);
+            }
+        }
+        
+        async function setMode(mode) {
+            try {
+                const result = await apiCall('mode', {mode});
+                currentState.mode = result.mode;
+                updateUI();
+                showMessage(`Switched to ${mode} mode`);
+            } catch (error) {
+                showMessage(error.message, 'error');
+            }
+        }
+        
+        async function setYouTubeURL() {
+            const url = document.getElementById('youtube-url').value.trim();
+            if (!url) {
+                showMessage('Please enter a YouTube URL', 'error');
+                return;
+            }
+            
+            try {
+                const result = await apiCall('url', {url});
+                currentState.last_online_url = result.url;
+                if (currentState.mode !== 'online') {
+                    await setMode('online');
+                }
+                updateUI();
+                showMessage('YouTube URL updated');
+            } catch (error) {
+                showMessage(error.message, 'error');
+            }
+        }
+        
+        async function setPreset(url) {
+            try {
+                const result = await apiCall('preset', {url});
+                currentState.last_online_url = result.url;
+                currentState.mode = result.mode;
+                document.getElementById('youtube-url').value = result.url;
+                updateUI();
+                showMessage('Preset selected');
+            } catch (error) {
+                showMessage(error.message, 'error');
+            }
+        }
+        
+        async function selectVideo(filename) {
+            try {
+                const result = await apiCall('offline-video', {filename});
+                currentState.selected_offline = result.filename;
+                if (currentState.mode !== 'offline') {
+                    await setMode('offline');
+                }
+                updateVideoList();
+                showMessage(`Selected video: ${filename}`);
+            } catch (error) {
+                showMessage(error.message, 'error');
+            }
+        }
+        
+        async function setVolume(volume) {
+            try {
+                const result = await apiCall('volume', {volume: parseInt(volume)});
+                currentState.volume = result.volume;
+                document.getElementById('volume-display').textContent = result.volume + '%';
+                document.getElementById('current-volume').textContent = result.volume + '%';
+            } catch (error) {
+                showMessage(error.message, 'error');
+            }
+        }
+        
+        async function toggleMute() {
+            try {
+                const newMuted = !currentState.muted;
+                const result = await apiCall('mute', {muted: newMuted});
+                currentState.muted = result.muted;
+                updateUI();
+                showMessage(result.muted ? 'Muted' : 'Unmuted');
+            } catch (error) {
+                showMessage(error.message, 'error');
+            }
+        }
+        
+        function updateUI() {
+            // Update mode buttons
+            document.getElementById('online-btn').classList.toggle('active', currentState.mode === 'online');
+            document.getElementById('offline-btn').classList.toggle('active', currentState.mode === 'offline');
+            
+            // Show/hide controls
+            document.getElementById('online-controls').style.display = 
+                currentState.mode === 'online' ? 'block' : 'none';
+            document.getElementById('offline-controls').style.display = 
+                currentState.mode === 'offline' ? 'block' : 'none';
+            
+            // Update status
+            document.getElementById('current-mode').textContent = currentState.mode.charAt(0).toUpperCase() + currentState.mode.slice(1);
+            document.getElementById('mute-status').textContent = currentState.muted ? '(Muted)' : '';
+            document.getElementById('mute-btn').innerHTML = currentState.muted ? '🔇 Unmute' : '🔊 Mute';
+            
+            // Update current info
+            const currentUrl = document.getElementById('current-url');
+            const currentVideo = document.getElementById('current-video');
+            if (currentState.mode === 'online' && currentState.last_online_url) {
+                if (currentUrl) currentUrl.textContent = currentState.last_online_url;
+                if (currentVideo) currentVideo.style.display = 'none';
+            } else if (currentState.mode === 'offline' && currentState.selected_offline) {
+                if (currentVideo) currentVideo.textContent = currentState.selected_offline;
+                if (currentUrl) currentUrl.style.display = 'none';
+            }
+        }
+        
+        function updateVideoList() {
+            const videos = document.querySelectorAll('.video-item');
+            videos.forEach(item => {
+                const filename = item.getAttribute('onclick').match(/'([^']+)'/)[1];
+                item.classList.toggle('selected', filename === currentState.selected_offline);
+            });
+        }
+        
+        // Initialize UI
+        updateUI();
+    </script>
+</body>
+</html>

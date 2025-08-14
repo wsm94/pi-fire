@@ -1,0 +1,15 @@
+{
+  "mode": "offline",
+  "last_online_url": "https://www.youtube.com/watch?v=L_LUpnjgPso",
+  "selected_offline": "fireplace.mp4",
+  "volume": 60,
+  "muted": true,
+  "stick_offline_until_manual": false,
+  "playlists": {
+    "default": ["fireplace.mp4", "campfire.mp4"],
+    "cozy": ["campfire.mp4"]
+  },
+  "active_playlist": "default",
+  "show_status_overlay": false,
+  "version": "1.0"
+}

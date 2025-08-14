@@ -1,0 +1,32 @@
+[Unit]
+Description=Fireplace Kiosk Watcher
+After=fire-web.service graphical-session.target
+Wants=fire-web.service
+Requires=graphical-session.target
+
+[Service]
+Type=simple
+User=fireplace
+Group=fireplace
+WorkingDirectory=/opt/fireplace
+Environment=PATH=/opt/fireplace/venv/bin
+Environment=DISPLAY=:0
+ExecStart=/opt/fireplace/venv/bin/python /opt/fireplace/app/watcher.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Resource limits
+MemoryMax=1G
+CPUQuota=80%
+
+# Security (less restrictive for Chromium)
+NoNewPrivileges=false
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/fireplace /tmp /home/fireplace
+PrivateTmp=false
+
+[Install]
+WantedBy=graphical.target

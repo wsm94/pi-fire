@@ -1,0 +1,24 @@
+{
+  "presets": [
+    {
+      "name": "Cozy Fireplace",
+      "url": "https://www.youtube.com/watch?v=L_LUpnjgPso",
+      "description": "Classic crackling fireplace"
+    },
+    {
+      "name": "Campfire",
+      "url": "https://www.youtube.com/watch?v=jfKfPfyJRdk",
+      "description": "Outdoor campfire with nature sounds"
+    },
+    {
+      "name": "Winter Fireplace",
+      "url": "https://www.youtube.com/watch?v=UgGP6bGVHOU",
+      "description": "Snowy window with fireplace"
+    },
+    {
+      "name": "Modern Fireplace",
+      "url": "https://www.youtube.com/watch?v=eyU3bRy2x44",
+      "description": "Contemporary gas fireplace"
+    }
+  ]
+}

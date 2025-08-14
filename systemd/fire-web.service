@@ -1,0 +1,30 @@
+[Unit]
+Description=Fireplace Web Control Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=fireplace
+Group=fireplace
+WorkingDirectory=/opt/fireplace
+Environment=PATH=/opt/fireplace/venv/bin
+ExecStart=/opt/fireplace/venv/bin/python /opt/fireplace/app/server.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+# Resource limits
+MemoryMax=256M
+CPUQuota=50%
+
+# Security
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/fireplace
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
