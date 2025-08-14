@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import json
+import os
 import time
 import subprocess
 import signal
@@ -11,7 +12,12 @@ from typing import Dict, Any, Optional
 import requests
 import psutil
 
-from validators import ConfigValidator, URLValidator
+try:
+    # Try relative import first (when run as module)
+    from .validators import ConfigValidator, URLValidator
+except ImportError:
+    # Fall back to direct import (when run as script)
+    from validators import ConfigValidator, URLValidator
 
 logging.basicConfig(
     level=logging.INFO,

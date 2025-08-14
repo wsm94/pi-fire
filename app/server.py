@@ -8,7 +8,12 @@ import logging
 from typing import Dict, Any, Optional
 import shutil
 
-from validators import ConfigValidator, URLValidator, FileValidator, validate_volume, validate_mode
+try:
+    # Try relative import first (when run as module)
+    from .validators import ConfigValidator, URLValidator, FileValidator, validate_volume, validate_mode
+except ImportError:
+    # Fall back to direct import (when run as script)
+    from validators import ConfigValidator, URLValidator, FileValidator, validate_volume, validate_mode
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
