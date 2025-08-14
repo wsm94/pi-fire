@@ -1,17 +1,26 @@
 [Unit]
 Description=Fireplace Kiosk Watcher
-After=fire-web.service graphical-session.target
+After=multi-user.target fire-web.service
 Wants=fire-web.service
-Requires=graphical-session.target
 
 [Service]
 Type=simple
-User=fireplace
-Group=fireplace
+User=pi
+Group=pi
 WorkingDirectory=/opt/fireplace
-Environment=PATH=/opt/fireplace/venv/bin
-Environment=DISPLAY=:0
+Environment="PATH=/opt/fireplace/venv/bin:/usr/bin:/bin"
+Environment="DISPLAY=:0"
+Environment="XAUTHORITY=/home/pi/.Xauthority"
+Environment="HOME=/home/pi"
+
+# Wait for X server to be ready
+ExecStartPre=/bin/bash -c 'until pgrep -x Xorg; do sleep 2; done'
+ExecStartPre=/bin/sleep 5
+
+# Start the watcher
 ExecStart=/opt/fireplace/venv/bin/python /opt/fireplace/app/watcher.py
+
+# Restart configuration
 Restart=always
 RestartSec=10
 StandardOutput=journal
@@ -21,12 +30,5 @@ StandardError=journal
 MemoryMax=1G
 CPUQuota=80%
 
-# Security (less restrictive for Chromium)
-NoNewPrivileges=false
-ProtectSystem=strict
-ProtectHome=true
-ReadWritePaths=/opt/fireplace /tmp /home/fireplace
-PrivateTmp=false
-
 [Install]
-WantedBy=graphical.target
+WantedBy=default.target

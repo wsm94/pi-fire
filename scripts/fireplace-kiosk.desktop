@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Fireplace Kiosk
+Comment=Start Fireplace Kiosk Display
+Exec=/opt/fireplace/scripts/launch_kiosk.sh
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+X-GNOME-Autostart-Delay=10
