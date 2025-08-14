@@ -258,5 +258,49 @@ def offline_player():
 def offline_static(filename):
     return send_from_directory(Path(__file__).parent / 'offline_player', filename)
 
+@app.route('/videos/<path:filename>')
+def serve_video(filename):
+    """Serve video files from the videos directory"""
+    # Sanitize filename to prevent directory traversal
+    if not FileValidator.is_supported_video(filename):
+        return "Invalid video format", 400
+    
+    # Try production path first, then development path
+    videos_dir = Path(VIDEOS_DIR)
+    if not videos_dir.exists():
+        videos_dir = Path('/opt/fireplace/videos')
+    
+    if not videos_dir.exists():
+        logger.error(f"Videos directory not found: {videos_dir}")
+        return "Videos directory not found", 500
+    
+    video_path = videos_dir / filename
+    
+    # Security check - ensure file is within videos directory
+    try:
+        video_path = video_path.resolve()
+        videos_dir = videos_dir.resolve()
+        if not str(video_path).startswith(str(videos_dir)):
+            return "Access denied", 403
+    except Exception:
+        return "Invalid path", 400
+    
+    if not video_path.is_file():
+        logger.warning(f"Video file not found: {filename}")
+        return "Video not found", 404
+    
+    # Serve with appropriate MIME type
+    mime_type = 'video/mp4'
+    if filename.lower().endswith('.webm'):
+        mime_type = 'video/webm'
+    elif filename.lower().endswith('.mkv'):
+        mime_type = 'video/x-matroska'
+    elif filename.lower().endswith('.avi'):
+        mime_type = 'video/x-msvideo'
+    elif filename.lower().endswith('.mov'):
+        mime_type = 'video/quicktime'
+    
+    return send_from_directory(str(videos_dir), filename, mimetype=mime_type)
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)

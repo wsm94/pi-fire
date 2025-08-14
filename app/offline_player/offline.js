@@ -51,11 +51,13 @@ class OfflinePlayer {
             if (this.videos.length > 0) {
                 this.startPlayback();
             } else {
-                this.showStatus('No videos available', 3000);
+                this.showStatus('No videos available - Please add videos to /opt/fireplace/videos/', 5000);
+                this.showNoVideosMessage();
             }
         } catch (error) {
             console.error('Failed to load videos:', error);
             this.showStatus('Error loading videos', 5000);
+            this.showNoVideosMessage();
         }
     }
     
@@ -80,13 +82,27 @@ class OfflinePlayer {
         if (index < 0 || index >= this.videos.length) return;
         
         const video = this.videos[index];
-        const videoPath = `/opt/fireplace/videos/${video.filename}`;
+        // Use HTTP URL to serve video through Flask
+        const videoPath = `/videos/${encodeURIComponent(video.filename)}`;
         
-        videoElement.src = `file://${videoPath}`;
+        videoElement.src = videoPath;
         videoElement.volume = this.muted ? 0 : this.volume / 100;
         videoElement.muted = this.muted;
         
-        console.log(`Loading video: ${video.filename}`);
+        console.log(`Loading video: ${video.filename} from ${videoPath}`);
+        
+        // Try to play automatically
+        videoElement.play().catch(e => {
+            console.log('Autoplay failed:', e);
+            this.showStatus('Click anywhere to start playback', 5000);
+            
+            // Add one-time click handler to start playback
+            const startPlayback = () => {
+                videoElement.play().catch(err => console.error('Play failed:', err));
+                document.removeEventListener('click', startPlayback);
+            };
+            document.addEventListener('click', startPlayback);
+        });
     }
     
     preloadNextVideo() {
@@ -114,17 +130,47 @@ class OfflinePlayer {
         return (this.currentIndex + 1) % this.videos.length;
     }
     
+    showNoVideosMessage() {
+        // Display a message on the video element
+        const container = document.getElementById('video-container');
+        container.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: center; height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                <div>
+                    <h1 style="font-size: 48px; margin-bottom: 20px;">🔥 No Videos Available</h1>
+                    <p style="font-size: 24px; margin-bottom: 40px;">Please add video files to:</p>
+                    <code style="background: rgba(0,0,0,0.3); padding: 10px 20px; border-radius: 5px; font-size: 20px;">/opt/fireplace/videos/</code>
+                    <p style="font-size: 16px; margin-top: 40px; opacity: 0.8;">Supported formats: MP4, WebM, MKV, AVI, MOV</p>
+                </div>
+            </div>
+        `;
+    }
+    
     setupEventListeners() {
         this.currentVideo.addEventListener('ended', () => {
-            if (!this.isTransitioning) {
+            if (!this.isTransitioning && this.videos.length > 0) {
                 this.transitionToNext();
             }
         });
         
         this.currentVideo.addEventListener('error', (e) => {
             console.error('Video playback error:', e);
-            this.showStatus('Video playback error', 3000);
-            setTimeout(() => this.transitionToNext(), 1000);
+            const videoSrc = e.target.src;
+            
+            // More detailed error message
+            let errorMsg = 'Video playback error';
+            if (videoSrc.includes('/videos/')) {
+                const filename = videoSrc.split('/videos/')[1];
+                errorMsg = `Cannot play video: ${decodeURIComponent(filename)}`;
+            }
+            
+            this.showStatus(errorMsg, 3000);
+            
+            // Only try next video if we have more videos
+            if (this.videos.length > 1) {
+                setTimeout(() => this.transitionToNext(), 1000);
+            } else if (this.videos.length === 0) {
+                this.showNoVideosMessage();
+            }
         });
         
         this.nextVideo.addEventListener('canplaythrough', () => {
