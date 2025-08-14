@@ -279,7 +279,7 @@
     </div>
     
     <script>
-        let currentState = {{ state | tojsonfilter }};
+        let currentState = {{ state | tojson }};
         
         function showMessage(message, type = 'success') {
             const container = document.getElementById('message-container');
