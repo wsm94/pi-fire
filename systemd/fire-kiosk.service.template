@@ -1,0 +1,30 @@
+[Unit]
+Description=Fireplace Kiosk Watcher
+After=multi-user.target fire-web.service
+Wants=fire-web.service
+
+[Service]
+Type=simple
+User=USER_PLACEHOLDER
+Group=USER_PLACEHOLDER
+WorkingDirectory=/opt/fireplace
+Environment="PATH=/opt/fireplace/venv/bin:/usr/bin:/bin"
+Environment="DISPLAY=:0"
+Environment="XAUTHORITY=/home/USER_PLACEHOLDER/.Xauthority"
+Environment="HOME=/home/USER_PLACEHOLDER"
+
+# Use the launch script which handles environment setup
+ExecStart=/opt/fireplace/scripts/launch_kiosk.sh
+
+# Restart configuration
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Resource limits
+MemoryMax=1G
+CPUQuota=80%
+
+[Install]
+WantedBy=default.target
