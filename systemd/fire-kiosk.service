@@ -13,12 +13,8 @@ Environment="DISPLAY=:0"
 Environment="XAUTHORITY=/home/pi/.Xauthority"
 Environment="HOME=/home/pi"
 
-# Wait for X server to be ready
-ExecStartPre=/bin/bash -c 'until pgrep -x Xorg; do sleep 2; done'
-ExecStartPre=/bin/sleep 5
-
-# Start the watcher
-ExecStart=/opt/fireplace/venv/bin/python /opt/fireplace/app/watcher.py
+# Use the launch script which handles environment setup
+ExecStart=/opt/fireplace/scripts/launch_kiosk.sh
 
 # Restart configuration
 Restart=always
