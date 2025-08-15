@@ -276,6 +276,25 @@
                 <span id="volume-display">{{ state.volume }}%</span>
             </div>
         </div>
+        
+        <div class="control-group">
+            <h3>Kiosk Control</h3>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button onclick="stopKiosk()" id="stop-kiosk-btn" style="background: #d32f2f;">
+                    🛑 Stop Kiosk
+                </button>
+                <button onclick="startKiosk()" id="start-kiosk-btn" style="background: #4caf50;">
+                    ▶️ Start Kiosk
+                </button>
+                <button onclick="checkKioskStatus()" style="background: #666;">
+                    🔄 Check Status
+                </button>
+                <span id="kiosk-status" style="margin-left: 10px; font-size: 14px;"></span>
+            </div>
+            <div style="margin-top: 10px; font-size: 12px; color: #999;">
+                Use these controls to stop/start the fullscreen display mode
+            </div>
+        </div>
     </div>
     
     <script>
@@ -434,8 +453,75 @@
             });
         }
         
+        async function stopKiosk() {
+            if (!confirm('Stop the kiosk display? You can restart it anytime.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/kiosk/stop', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage('Kiosk stopped successfully');
+                    document.getElementById('kiosk-status').textContent = '⚫ Stopped';
+                    document.getElementById('stop-kiosk-btn').disabled = true;
+                    document.getElementById('start-kiosk-btn').disabled = false;
+                } else {
+                    showMessage('Failed to stop kiosk: ' + (result.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                showMessage('Error stopping kiosk: ' + error.message, 'error');
+            }
+        }
+        
+        async function startKiosk() {
+            try {
+                const response = await fetch('/api/kiosk/start', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage('Kiosk started successfully');
+                    document.getElementById('kiosk-status').textContent = '🟢 Running';
+                    document.getElementById('stop-kiosk-btn').disabled = false;
+                    document.getElementById('start-kiosk-btn').disabled = true;
+                } else {
+                    showMessage('Failed to start kiosk: ' + (result.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                showMessage('Error starting kiosk: ' + error.message, 'error');
+            }
+        }
+        
+        async function checkKioskStatus() {
+            try {
+                const response = await fetch('/api/kiosk/status');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const statusText = result.active ? '🟢 Running' : '⚫ Stopped';
+                    document.getElementById('kiosk-status').textContent = statusText;
+                    document.getElementById('stop-kiosk-btn').disabled = !result.active;
+                    document.getElementById('start-kiosk-btn').disabled = result.active;
+                    showMessage('Status: ' + result.status);
+                } else {
+                    showMessage('Failed to check status', 'error');
+                }
+            } catch (error) {
+                showMessage('Error checking status: ' + error.message, 'error');
+            }
+        }
+        
         // Initialize UI
         updateUI();
+        // Check kiosk status on load
+        checkKioskStatus();
     </script>
 </body>
 </html>

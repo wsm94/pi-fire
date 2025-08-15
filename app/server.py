@@ -302,5 +302,80 @@ def serve_video(filename):
     
     return send_from_directory(str(videos_dir), filename, mimetype=mime_type)
 
+@app.route('/api/kiosk/stop', methods=['POST'])
+def stop_kiosk():
+    """Stop the kiosk service"""
+    try:
+        import subprocess
+        # Stop the kiosk service
+        result = subprocess.run(
+            ['sudo', 'systemctl', 'stop', 'fire-kiosk.service'],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        
+        if result.returncode == 0:
+            logger.info("Kiosk service stopped successfully")
+            return jsonify({"success": True, "message": "Kiosk stopped"})
+        else:
+            logger.error(f"Failed to stop kiosk: {result.stderr}")
+            return jsonify({"success": False, "error": result.stderr}), 500
+            
+    except subprocess.TimeoutExpired:
+        return jsonify({"success": False, "error": "Command timed out"}), 500
+    except Exception as e:
+        logger.error(f"Error stopping kiosk: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/kiosk/start', methods=['POST'])
+def start_kiosk():
+    """Start the kiosk service"""
+    try:
+        import subprocess
+        # Start the kiosk service
+        result = subprocess.run(
+            ['sudo', 'systemctl', 'start', 'fire-kiosk.service'],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        
+        if result.returncode == 0:
+            logger.info("Kiosk service started successfully")
+            return jsonify({"success": True, "message": "Kiosk started"})
+        else:
+            logger.error(f"Failed to start kiosk: {result.stderr}")
+            return jsonify({"success": False, "error": result.stderr}), 500
+            
+    except subprocess.TimeoutExpired:
+        return jsonify({"success": False, "error": "Command timed out"}), 500
+    except Exception as e:
+        logger.error(f"Error starting kiosk: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/kiosk/status', methods=['GET'])
+def kiosk_status():
+    """Get the status of the kiosk service"""
+    try:
+        import subprocess
+        result = subprocess.run(
+            ['systemctl', 'is-active', 'fire-kiosk.service'],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        
+        is_active = result.stdout.strip() == 'active'
+        return jsonify({
+            "success": True,
+            "active": is_active,
+            "status": result.stdout.strip()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error checking kiosk status: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)
