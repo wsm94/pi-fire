@@ -2,7 +2,7 @@
 
 **Last Updated:** 2025-08-16  
 **Current Phase:** 2A (User Features) - IN PROGRESS 🚧  
-**Overall Progress:** ████████░░░░░░░░░░░░ 45%
+**Overall Progress:** ██████████░░░░░░░░░░ 50%
 
 ---
 
@@ -75,12 +75,12 @@ A Raspberry Pi 5 kiosk system that displays fireplace videos with mobile control
 
 ## 🚧 Phase 2A: User Features & Power Management - IN PROGRESS
 
-### 2A.1 Favorites Management 🚧
-- [ ] Extend presets.json to support user-added favorites
-- [ ] Add "Add Current Video to Favorites" button for currently playing content
-- [ ] Add remove buttons for each favorite preset in UI (without deleting local files)
-- [ ] Implement dynamic favorites persistence
-- [ ] Create favorites section in presets area
+### 2A.1 Favorites Management ✅
+- [x] Extend state.json schema to support user-added favorites
+- [x] Add "Add Current Video to Favorites" button for currently playing content
+- [x] Add remove buttons for each favorite preset in UI (without deleting local files)
+- [x] Implement dynamic favorites persistence with FavoritesValidator
+- [x] Create favorites section in presets area with full API endpoints
 
 ### 2A.2 Power Management & Remote Controls 🚧
 - [ ] Add hamburger menu to web interface

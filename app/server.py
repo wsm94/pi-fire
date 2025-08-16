@@ -519,5 +519,95 @@ def kiosk_status():
         logger.error(f"Error checking kiosk status: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
+@app.route('/api/system/shutdown', methods=['POST'])
+def shutdown_system():
+    """Safely shutdown the Raspberry Pi"""
+    try:
+        import subprocess
+        logger.warning("System shutdown requested via web interface")
+        
+        # Use sudo shutdown with 1 minute delay to allow response to be sent
+        result = subprocess.run(
+            ['/usr/bin/sudo', '/usr/sbin/shutdown', '-h', '+1', 'Shutdown requested from fireplace control'],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        
+        if result.returncode == 0:
+            logger.info("System shutdown initiated successfully")
+            return jsonify({
+                "success": True, 
+                "message": "System will shutdown in 1 minute",
+                "countdown": 60
+            })
+        else:
+            logger.error(f"Failed to initiate shutdown: {result.stderr}")
+            return jsonify({"success": False, "error": result.stderr}), 500
+            
+    except subprocess.TimeoutExpired:
+        return jsonify({"success": False, "error": "Shutdown command timed out"}), 500
+    except Exception as e:
+        logger.error(f"Error initiating shutdown: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/system/reboot', methods=['POST'])
+def reboot_system():
+    """Safely reboot the Raspberry Pi"""
+    try:
+        import subprocess
+        logger.warning("System reboot requested via web interface")
+        
+        # Use sudo reboot with 1 minute delay to allow response to be sent
+        result = subprocess.run(
+            ['/usr/bin/sudo', '/usr/sbin/shutdown', '-r', '+1', 'Reboot requested from fireplace control'],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        
+        if result.returncode == 0:
+            logger.info("System reboot initiated successfully")
+            return jsonify({
+                "success": True, 
+                "message": "System will reboot in 1 minute",
+                "countdown": 60
+            })
+        else:
+            logger.error(f"Failed to initiate reboot: {result.stderr}")
+            return jsonify({"success": False, "error": result.stderr}), 500
+            
+    except subprocess.TimeoutExpired:
+        return jsonify({"success": False, "error": "Reboot command timed out"}), 500
+    except Exception as e:
+        logger.error(f"Error initiating reboot: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/system/cancel-shutdown', methods=['POST'])
+def cancel_shutdown():
+    """Cancel a pending shutdown or reboot"""
+    try:
+        import subprocess
+        result = subprocess.run(
+            ['/usr/bin/sudo', '/usr/sbin/shutdown', '-c'],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        
+        if result.returncode == 0:
+            logger.info("Shutdown/reboot cancelled successfully")
+            return jsonify({"success": True, "message": "Shutdown/reboot cancelled"})
+        else:
+            # shutdown -c can return non-zero even when successful if no shutdown was pending
+            logger.info("Shutdown cancel command completed")
+            return jsonify({"success": True, "message": "No pending shutdown to cancel"})
+            
+    except subprocess.TimeoutExpired:
+        return jsonify({"success": False, "error": "Cancel command timed out"}), 500
+    except Exception as e:
+        logger.error(f"Error cancelling shutdown: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)

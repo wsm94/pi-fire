@@ -187,11 +187,138 @@
             opacity: 0.6;
             pointer-events: none;
         }
+        
+        /* Hamburger Menu Styles */
+        .hamburger-menu {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        
+        .hamburger-btn {
+            background: #333;
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .hamburger-btn:hover {
+            background: #555;
+        }
+        
+        .hamburger-dropdown {
+            position: absolute;
+            top: 60px;
+            right: 0;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 10px;
+            min-width: 200px;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        .hamburger-dropdown.show {
+            display: block;
+        }
+        
+        .hamburger-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #444;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            transition: background-color 0.2s;
+        }
+        
+        .hamburger-item:hover {
+            background: #333;
+        }
+        
+        .hamburger-item:last-child {
+            border-bottom: none;
+        }
+        
+        .hamburger-item.danger:hover {
+            background: #d32f2f;
+        }
+        
+        .hamburger-item.warning:hover {
+            background: #f57c00;
+        }
+        
+        .countdown-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        
+        .countdown-content {
+            background: #2a2a2a;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            border: 2px solid #ff6b35;
+        }
+        
+        .countdown-timer {
+            font-size: 48px;
+            font-weight: bold;
+            color: #ff6b35;
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>🔥 Fireplace Control</h1>
+        
+        <!-- Hamburger Menu -->
+        <div class="hamburger-menu">
+            <button class="hamburger-btn" onclick="toggleHamburgerMenu()">
+                ☰
+            </button>
+            <div class="hamburger-dropdown" id="hamburger-dropdown">
+                <div class="hamburger-item warning" onclick="systemReboot()">
+                    <span>🔄</span>
+                    <span>Reboot System</span>
+                </div>
+                <div class="hamburger-item danger" onclick="systemShutdown()">
+                    <span>⏽</span>
+                    <span>Shutdown System</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Countdown Overlay -->
+    <div class="countdown-overlay" id="countdown-overlay">
+        <div class="countdown-content">
+            <h2 id="countdown-title">System Shutdown</h2>
+            <div class="countdown-timer" id="countdown-timer">60</div>
+            <p id="countdown-message">System will shutdown in:</p>
+            <button onclick="cancelShutdown()" style="background: #4caf50; color: white; border: none; padding: 15px 30px; border-radius: 5px; cursor: pointer; font-size: 16px;">
+                Cancel
+            </button>
+        </div>
     </div>
     
     <div class="status">
@@ -645,6 +772,124 @@
                 }
             } catch (error) {
                 showMessage('Error selecting favorite: ' + error.message, 'error');
+            }
+        }
+        
+        function toggleHamburgerMenu() {
+            const dropdown = document.getElementById('hamburger-dropdown');
+            dropdown.classList.toggle('show');
+        }
+        
+        // Close hamburger menu when clicking elsewhere
+        document.addEventListener('click', function(event) {
+            const menu = document.querySelector('.hamburger-menu');
+            const dropdown = document.getElementById('hamburger-dropdown');
+            
+            if (!menu.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+        
+        let countdownInterval = null;
+        let countdownSeconds = 60;
+        
+        async function systemShutdown() {
+            if (!confirm('⚠️ SHUTDOWN SYSTEM?\n\nThis will turn off the Raspberry Pi completely.\nYou will need to physically power it back on.\n\nContinue?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/system/shutdown', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    showCountdown('Shutdown', 'System will shutdown in:', result.countdown || 60);
+                    showMessage('System shutdown initiated');
+                } else {
+                    showMessage('Failed to shutdown: ' + (result.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                showMessage('Error initiating shutdown: ' + error.message, 'error');
+            }
+            
+            // Close hamburger menu
+            document.getElementById('hamburger-dropdown').classList.remove('show');
+        }
+        
+        async function systemReboot() {
+            if (!confirm('🔄 REBOOT SYSTEM?\n\nThis will restart the Raspberry Pi.\nThe system will be back online in about 2-3 minutes.\n\nContinue?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/system/reboot', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    showCountdown('Reboot', 'System will reboot in:', result.countdown || 60);
+                    showMessage('System reboot initiated');
+                } else {
+                    showMessage('Failed to reboot: ' + (result.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                showMessage('Error initiating reboot: ' + error.message, 'error');
+            }
+            
+            // Close hamburger menu
+            document.getElementById('hamburger-dropdown').classList.remove('show');
+        }
+        
+        function showCountdown(action, message, seconds) {
+            countdownSeconds = seconds;
+            
+            document.getElementById('countdown-title').textContent = `System ${action}`;
+            document.getElementById('countdown-message').textContent = message;
+            document.getElementById('countdown-timer').textContent = countdownSeconds;
+            document.getElementById('countdown-overlay').style.display = 'flex';
+            
+            // Start countdown
+            countdownInterval = setInterval(() => {
+                countdownSeconds--;
+                document.getElementById('countdown-timer').textContent = countdownSeconds;
+                
+                if (countdownSeconds <= 0) {
+                    clearInterval(countdownInterval);
+                    document.getElementById('countdown-overlay').style.display = 'none';
+                    showMessage(`${action} in progress...`);
+                }
+            }, 1000);
+        }
+        
+        async function cancelShutdown() {
+            try {
+                const response = await fetch('/api/system/cancel-shutdown', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Clear countdown
+                    if (countdownInterval) {
+                        clearInterval(countdownInterval);
+                        countdownInterval = null;
+                    }
+                    
+                    // Hide overlay
+                    document.getElementById('countdown-overlay').style.display = 'none';
+                    
+                    showMessage('Shutdown/reboot cancelled');
+                } else {
+                    showMessage('Failed to cancel: ' + (result.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                showMessage('Error cancelling: ' + error.message, 'error');
             }
         }
         
