@@ -1,5 +1,7 @@
 import json
 import re
+import uuid
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, Optional
 import jsonschema
@@ -103,3 +105,74 @@ def validate_mode(mode: Any) -> Optional[str]:
     if mode in ["online", "offline"]:
         return mode
     return None
+
+class FavoritesValidator:
+    @staticmethod
+    def validate_favorite_name(name: str) -> Optional[str]:
+        """Validate and sanitize favorite name"""
+        if not isinstance(name, str):
+            return None
+        
+        # Strip whitespace and limit length
+        cleaned = name.strip()
+        if not cleaned or len(cleaned) > 50:
+            return None
+        
+        # Remove potentially dangerous characters
+        safe_name = re.sub(r'[<>&"\'`]', '', cleaned)
+        return safe_name if safe_name else None
+    
+    @staticmethod
+    def create_favorite_from_online(name: str, url: str) -> Optional[Dict[str, Any]]:
+        """Create a favorite from online YouTube URL"""
+        validated_name = FavoritesValidator.validate_favorite_name(name)
+        if not validated_name:
+            return None
+        
+        if not URLValidator.is_valid_youtube_url(url):
+            return None
+        
+        return {
+            "id": f"fav_{uuid.uuid4().hex[:8]}",
+            "name": validated_name,
+            "url": url,
+            "type": "favorite",
+            "created_date": datetime.utcnow().isoformat() + "Z",
+            "source": "online"
+        }
+    
+    @staticmethod
+    def create_favorite_from_offline(name: str, filename: str) -> Optional[Dict[str, Any]]:
+        """Create a favorite from offline video file"""
+        validated_name = FavoritesValidator.validate_favorite_name(name)
+        if not validated_name:
+            return None
+        
+        if not FileValidator.is_supported_video(filename):
+            return None
+        
+        return {
+            "id": f"fav_{uuid.uuid4().hex[:8]}",
+            "name": validated_name,
+            "filename": filename,
+            "type": "favorite",
+            "created_date": datetime.utcnow().isoformat() + "Z",
+            "source": "offline"
+        }
+    
+    @staticmethod
+    def validate_favorite_id(favorite_id: str) -> bool:
+        """Validate favorite ID format"""
+        if not isinstance(favorite_id, str):
+            return False
+        return bool(re.match(r'^fav_[a-f0-9]{8}$', favorite_id))
+    
+    @staticmethod
+    def find_duplicate_favorite(favorites: list, url: str = None, filename: str = None) -> Optional[Dict[str, Any]]:
+        """Find if a duplicate favorite already exists"""
+        for fav in favorites:
+            if url and fav.get("source") == "online" and fav.get("url") == url:
+                return fav
+            elif filename and fav.get("source") == "offline" and fav.get("filename") == filename:
+                return fav
+        return None

@@ -10,10 +10,10 @@ import shutil
 
 try:
     # Try relative import first (when run as module)
-    from .validators import ConfigValidator, URLValidator, FileValidator, validate_volume, validate_mode
+    from .validators import ConfigValidator, URLValidator, FileValidator, validate_volume, validate_mode, FavoritesValidator
 except ImportError:
     # Fall back to direct import (when run as script)
-    from validators import ConfigValidator, URLValidator, FileValidator, validate_volume, validate_mode
+    from validators import ConfigValidator, URLValidator, FileValidator, validate_volume, validate_mode, FavoritesValidator
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -129,12 +129,14 @@ def index():
     policy = load_policy()
     presets = load_presets()
     videos = get_available_videos()
+    favorites = state.get('user_favorites', [])
     
     return render_template('index.html', 
                          state=state,
                          policy=policy,
                          presets=presets["presets"],
-                         videos=videos)
+                         videos=videos,
+                         favorites=favorites)
 
 @app.route('/api/state', methods=['GET'])
 def get_state():
@@ -249,6 +251,146 @@ def set_offline_video():
 @app.route('/api/videos', methods=['GET'])
 def list_videos():
     return jsonify({"videos": get_available_videos()})
+
+@app.route('/api/favorites', methods=['GET'])
+def get_favorites():
+    """Get all user favorites"""
+    state = state_manager.load_state()
+    favorites = state.get('user_favorites', [])
+    return jsonify({"favorites": favorites})
+
+@app.route('/api/favorites/add', methods=['POST'])
+def add_favorite():
+    """Add current playing content to favorites"""
+    data = request.get_json()
+    if not data or 'name' not in data:
+        return jsonify({"error": "Favorite name required"}), 400
+    
+    name = data['name']
+    state = state_manager.load_state()
+    current_mode = state.get('mode')
+    
+    # Get current favorites to check for duplicates
+    current_favorites = state.get('user_favorites', [])
+    
+    # Create favorite based on current mode
+    favorite = None
+    if current_mode == 'online':
+        current_url = state.get('last_online_url')
+        if not current_url:
+            return jsonify({"error": "No online URL currently set"}), 400
+        
+        # Check for duplicate
+        if FavoritesValidator.find_duplicate_favorite(current_favorites, url=current_url):
+            return jsonify({"error": "This video is already in favorites"}), 400
+        
+        favorite = FavoritesValidator.create_favorite_from_online(name, current_url)
+    
+    elif current_mode == 'offline':
+        current_filename = state.get('selected_offline')
+        if not current_filename:
+            return jsonify({"error": "No offline video currently selected"}), 400
+        
+        # Check for duplicate
+        if FavoritesValidator.find_duplicate_favorite(current_favorites, filename=current_filename):
+            return jsonify({"error": "This video is already in favorites"}), 400
+        
+        favorite = FavoritesValidator.create_favorite_from_offline(name, current_filename)
+    
+    if not favorite:
+        return jsonify({"error": "Could not create favorite"}), 400
+    
+    # Add to favorites list
+    current_favorites.append(favorite)
+    
+    # Save state
+    if state_manager.update_field('user_favorites', current_favorites):
+        logger.info(f"Added favorite: {favorite['name']} ({favorite['source']})")
+        return jsonify({"success": True, "favorite": favorite})
+    
+    return jsonify({"error": "Failed to save favorite"}), 500
+
+@app.route('/api/favorites/remove', methods=['DELETE'])
+def remove_favorite():
+    """Remove a favorite by ID"""
+    data = request.get_json()
+    if not data or 'id' not in data:
+        return jsonify({"error": "Favorite ID required"}), 400
+    
+    favorite_id = data['id']
+    if not FavoritesValidator.validate_favorite_id(favorite_id):
+        return jsonify({"error": "Invalid favorite ID"}), 400
+    
+    state = state_manager.load_state()
+    current_favorites = state.get('user_favorites', [])
+    
+    # Find and remove the favorite
+    updated_favorites = [fav for fav in current_favorites if fav.get('id') != favorite_id]
+    
+    if len(updated_favorites) == len(current_favorites):
+        return jsonify({"error": "Favorite not found"}), 404
+    
+    # Save updated state
+    if state_manager.update_field('user_favorites', updated_favorites):
+        logger.info(f"Removed favorite with ID: {favorite_id}")
+        return jsonify({"success": True, "removed_id": favorite_id})
+    
+    return jsonify({"error": "Failed to remove favorite"}), 500
+
+@app.route('/api/favorites/select', methods=['POST'])
+def select_favorite():
+    """Select a favorite and switch to it"""
+    data = request.get_json()
+    if not data or 'id' not in data:
+        return jsonify({"error": "Favorite ID required"}), 400
+    
+    favorite_id = data['id']
+    if not FavoritesValidator.validate_favorite_id(favorite_id):
+        return jsonify({"error": "Invalid favorite ID"}), 400
+    
+    state = state_manager.load_state()
+    current_favorites = state.get('user_favorites', [])
+    
+    # Find the favorite
+    favorite = None
+    for fav in current_favorites:
+        if fav.get('id') == favorite_id:
+            favorite = fav
+            break
+    
+    if not favorite:
+        return jsonify({"error": "Favorite not found"}), 404
+    
+    # Switch to the favorite content
+    success = False
+    if favorite['source'] == 'online':
+        url = favorite.get('url')
+        if url and URLValidator.is_valid_youtube_url(url):
+            success = state_manager.update_field('last_online_url', url)
+            if success and state.get('mode') != 'online':
+                success = state_manager.update_field('mode', 'online')
+    
+    elif favorite['source'] == 'offline':
+        filename = favorite.get('filename')
+        if filename:
+            # Verify file still exists
+            videos = get_available_videos()
+            if any(v['filename'] == filename for v in videos):
+                success = state_manager.update_field('selected_offline', filename)
+                if success and state.get('mode') != 'offline':
+                    success = state_manager.update_field('mode', 'offline')
+            else:
+                return jsonify({"error": "Video file no longer exists"}), 404
+    
+    if success:
+        logger.info(f"Selected favorite: {favorite['name']}")
+        return jsonify({
+            "success": True, 
+            "favorite": favorite,
+            "mode": favorite['source']  # online or offline
+        })
+    
+    return jsonify({"error": "Failed to select favorite"}), 500
 
 @app.route('/offline')
 def offline_player():

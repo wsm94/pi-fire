@@ -11,5 +11,6 @@
   },
   "active_playlist": "default",
   "show_status_overlay": false,
+  "user_favorites": [],
   "version": "1.0"
 }

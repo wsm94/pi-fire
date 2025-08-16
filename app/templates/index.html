@@ -206,6 +206,11 @@
                 <strong>Video:</strong> <span id="current-video">{{ state.selected_offline }}</span>
             {% endif %}
         </div>
+        <div style="margin-top: 15px;">
+            <button onclick="addToFavorites()" id="add-favorite-btn" style="background: #4caf50;">
+                ⭐ Add to Favorites
+            </button>
+        </div>
     </div>
     
     <div id="message-container"></div>
@@ -240,6 +245,36 @@
                     <div class="preset-desc">{{ preset.description }}</div>
                 </div>
                 {% endfor %}
+            </div>
+            
+            <h4>My Favorites</h4>
+            <div class="presets" id="favorites-list">
+                {% for favorite in favorites %}
+                <div class="preset-btn favorite-item" data-id="{{ favorite.id }}">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div onclick="selectFavorite('{{ favorite.id }}')" style="flex: 1; cursor: pointer;">
+                            <div class="preset-title">{{ favorite.name }}</div>
+                            <div class="preset-desc">
+                                {% if favorite.source == 'online' %}
+                                    📺 YouTube
+                                {% else %}
+                                    💾 {{ favorite.filename }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <button onclick="removeFavorite('{{ favorite.id }}')" 
+                                style="background: #f44336; color: white; border: none; padding: 5px 8px; border-radius: 3px; cursor: pointer; margin-left: 10px;">
+                            ❌
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+                {% if not favorites %}
+                <div class="preset-btn" style="opacity: 0.6;">
+                    <div class="preset-title">No favorites yet</div>
+                    <div class="preset-desc">Use "Add to Favorites" to save videos</div>
+                </div>
+                {% endif %}
             </div>
         </div>
         
@@ -515,6 +550,101 @@
                 }
             } catch (error) {
                 showMessage('Error checking status: ' + error.message, 'error');
+            }
+        }
+        
+        async function addToFavorites() {
+            const name = prompt('Enter a name for this favorite:');
+            if (!name || !name.trim()) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/favorites/add', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({name: name.trim()})
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage(`Added "${result.favorite.name}" to favorites`);
+                    // Refresh the page to show the new favorite
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showMessage(result.error || 'Failed to add favorite', 'error');
+                }
+            } catch (error) {
+                showMessage('Error adding favorite: ' + error.message, 'error');
+            }
+        }
+        
+        async function removeFavorite(favoriteId) {
+            if (!confirm('Remove this favorite?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/favorites/remove', {
+                    method: 'DELETE',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({id: favoriteId})
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage('Favorite removed');
+                    // Remove the favorite from the UI
+                    const favoriteElement = document.querySelector(`[data-id="${favoriteId}"]`);
+                    if (favoriteElement) {
+                        favoriteElement.remove();
+                    }
+                    
+                    // Check if favorites list is empty and show placeholder
+                    const favoritesList = document.getElementById('favorites-list');
+                    if (favoritesList.children.length === 0) {
+                        favoritesList.innerHTML = `
+                            <div class="preset-btn" style="opacity: 0.6;">
+                                <div class="preset-title">No favorites yet</div>
+                                <div class="preset-desc">Use "Add to Favorites" to save videos</div>
+                            </div>
+                        `;
+                    }
+                } else {
+                    showMessage(result.error || 'Failed to remove favorite', 'error');
+                }
+            } catch (error) {
+                showMessage('Error removing favorite: ' + error.message, 'error');
+            }
+        }
+        
+        async function selectFavorite(favoriteId) {
+            try {
+                const response = await fetch('/api/favorites/select', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({id: favoriteId})
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Update current state
+                    currentState.mode = result.mode;
+                    if (result.mode === 'online') {
+                        currentState.last_online_url = result.favorite.url;
+                        document.getElementById('youtube-url').value = result.favorite.url;
+                    } else {
+                        currentState.selected_offline = result.favorite.filename;
+                    }
+                    
+                    updateUI();
+                    updateVideoList();
+                    showMessage(`Selected favorite: ${result.favorite.name}`);
+                } else {
+                    showMessage(result.error || 'Failed to select favorite', 'error');
+                }
+            } catch (error) {
+                showMessage('Error selecting favorite: ' + error.message, 'error');
             }
         }
         

@@ -45,6 +45,54 @@
         },
         "version": {
           "type": "string"
+        },
+        "user_favorites": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 50
+              },
+              "url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["favorite"]
+              },
+              "created_date": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "source": {
+                "type": "string",
+                "enum": ["online", "offline"]
+              },
+              "filename": {
+                "type": "string"
+              }
+            },
+            "required": ["id", "name", "type", "created_date", "source"],
+            "additionalProperties": false,
+            "if": {
+              "properties": {
+                "source": {"const": "online"}
+              }
+            },
+            "then": {
+              "required": ["url"]
+            },
+            "else": {
+              "required": ["filename"]
+            }
+          }
         }
       },
       "required": ["mode", "volume", "muted", "version"],
