@@ -1,8 +1,8 @@
 # 🔥 Fireplace Pi - Project Progress Tracker
 
-**Last Updated:** 2025-08-14  
-**Current Phase:** 1 (MVP) - COMPLETE ✅  
-**Overall Progress:** ████████░░░░░░░░░░░░ 40%
+**Last Updated:** 2025-08-16  
+**Current Phase:** 2A (User Features) - IN PROGRESS 🚧  
+**Overall Progress:** ████████░░░░░░░░░░░░ 45%
 
 ---
 
@@ -73,23 +73,50 @@ A Raspberry Pi 5 kiosk system that displays fireplace videos with mobile control
 
 ---
 
-## 🚧 Phase 2: Network Resilience & Auto-Start - TODO
+## 🚧 Phase 2A: User Features & Power Management - IN PROGRESS
 
-### 2.1 Enhanced Network Monitoring ⏳
+### 2A.1 Favorites Management 🚧
+- [ ] Extend presets.json to support user-added favorites
+- [ ] Add "Add Current Video to Favorites" button for currently playing content
+- [ ] Add remove buttons for each favorite preset in UI (without deleting local files)
+- [ ] Implement dynamic favorites persistence
+- [ ] Create favorites section in presets area
+
+### 2A.2 Power Management & Remote Controls 🚧
+- [ ] Add hamburger menu to web interface
+- [ ] Implement power off and reboot API endpoints with sudo permissions
+- [ ] Add scheduled shutdown feature (default 2 AM, configurable)
+- [ ] Configure POWER_OFF_ON_HALT=1 for minimal standby power
+- [ ] Test safe shutdown procedures on Pi 5
+
+### 2A.3 Wi-Fi Pre-Provisioning 🚧
+- [ ] Create wpa_supplicant.conf template system
+- [ ] Add network configuration to installation scripts
+- [ ] Implement multi-location Wi-Fi profile support
+- [ ] Add network setup wizard to web interface
+- [ ] Support multiple SSID configurations for deployment
+
+**Estimated Completion:** 3-4 days
+
+---
+
+## 🔄 Phase 2B: Network Resilience & Infrastructure - PLANNED
+
+### 2B.1 Enhanced Network Monitoring 📋
 - [ ] Multi-endpoint checking (Google, Cloudflare, etc.)
 - [ ] Exponential backoff (5s → 60s)
 - [ ] Smooth fade transitions
 - [ ] Auto-recovery when internet returns
 - [ ] Network status logging
 
-### 2.2 Chromium Integration ⏳
+### 2B.2 Chromium Integration 📋
 - [ ] Install uBlock Origin extension
 - [ ] Configure dedicated Chromium profile
 - [ ] Optimize kiosk mode flags
 - [ ] YouTube embed parameter tuning
 - [ ] Memory usage limits
 
-### 2.3 SystemD Services ⏳
+### 2B.3 SystemD Services 📋
 - [ ] Test service auto-restart
 - [ ] Configure resource limits
 - [ ] Add monitoring hooks
@@ -100,21 +127,21 @@ A Raspberry Pi 5 kiosk system that displays fireplace videos with mobile control
 
 ---
 
-## 🔄 Phase 3: Enhanced Features - PLANNED
+## 🔄 Phase 3: Distribution & Installation - PLANNED
 
-### 3.1 Security & Authentication 📋
+### 3.1 Enhanced Distribution 📋
+- [ ] Create installer packages (deb/tar.gz)
+- [ ] Automated deployment scripts
+- [ ] Multi-platform installation support
+- [ ] Version management and updates
+- [ ] Backup/restore functionality
+
+### 3.2 Advanced Features 📋
 - [ ] Flask-Login implementation
 - [ ] Rate limiting (Flask-Limiter)
 - [ ] Input sanitization improvements
 - [ ] HTTPS with self-signed certs
 - [ ] PIN/password protection
-
-### 3.2 Video Management 📋
-- [ ] File upload through web UI
-- [ ] Thumbnail generation (ffmpeg)
-- [ ] Playlist CRUD operations
-- [ ] Video metadata extraction
-- [ ] Storage management
 
 ### 3.3 System Monitoring 📋
 - [ ] Memory usage tracking
@@ -127,26 +154,28 @@ A Raspberry Pi 5 kiosk system that displays fireplace videos with mobile control
 
 ---
 
-## 🎯 Phase 4: Installation & Deployment - PLANNED
+## 🎯 Phase 4: Polish & Documentation - PLANNED
 
-### 4.1 Installation Scripts 📋
-- [ ] Dependency verification
-- [ ] Automated setup wizard
-- [ ] Permission management
-- [ ] Backup/restore functionality
+### 4.1 Video Management Enhancements 📋
+- [ ] File upload through web UI
+- [ ] Thumbnail generation (ffmpeg)
+- [ ] Playlist CRUD operations
+- [ ] Video metadata extraction
+- [ ] Storage management
 
-### 4.2 Wi-Fi Pre-provisioning 📋
-- [ ] wpa_supplicant.conf parsing
-- [ ] Multi-SSID support
-- [ ] Network testing
-- [ ] First-run wizard
-
-### 4.3 Documentation & Testing 📋
+### 4.2 Documentation & Testing 📋
 - [ ] Unit test suite
 - [ ] Integration tests
 - [ ] Performance benchmarks
 - [ ] User guide
 - [ ] Troubleshooting guide
+
+### 4.3 User Experience 📋
+- [ ] Mobile app wrapper
+- [ ] Improved UI/UX design
+- [ ] Loading animations
+- [ ] Dark/light theme toggle
+- [ ] Keyboard shortcuts
 
 **Estimated Completion:** 2-3 days
 
@@ -243,31 +272,42 @@ http://fireplace.local:8080
 | Phase | Status | Days Est. | Progress |
 |-------|--------|-----------|----------|
 | Phase 1 (MVP) | ✅ Complete | 1 | 100% |
-| Phase 2 (Network) | ⏳ Next | 2-3 | 0% |
-| Phase 3 (Features) | 📋 Planned | 3-4 | 0% |
-| Phase 4 (Deploy) | 📋 Planned | 2-3 | 0% |
+| Phase 2A (User Features) | 🚧 In Progress | 3-4 | 10% |
+| Phase 2B (Network) | 📋 Planned | 2-3 | 0% |
+| Phase 3 (Distribution) | 📋 Planned | 3-4 | 0% |
+| Phase 4 (Polish) | 📋 Planned | 2-3 | 0% |
 
-**Total Project Completion:** ~40%
+**Total Project Completion:** ~45%
 
 ---
 
-## 🎯 Next Immediate Tasks
+## 🎯 Next Immediate Tasks (Phase 2A)
 
-1. **Test on actual Raspberry Pi hardware**
-2. **Implement exponential backoff for network checks**
-3. **Install and configure uBlock Origin**
-4. **Add sample fireplace videos**
-5. **Create systemd service installation test**
+1. **Add favorites management to presets (add/remove current video)**
+2. **Implement hamburger menu with power off and reboot buttons**
+3. **Add scheduled shutdown feature with configurable time (default 2 AM)**
+4. **Create Wi-Fi pre-provisioning system for deployment**
+5. **Configure Pi 5 power management (POWER_OFF_ON_HALT=1)**
+
+## 🔌 Power Management Notes
+
+### Raspberry Pi 5 Power Behavior
+- **Auto-Boot**: Pi 5 automatically boots when power is applied (perfect for remote deployment)
+- **Safe Shutdown**: Switching power off is generally safe, but proper shutdown is preferred
+- **Standby Power**: Configure `POWER_OFF_ON_HALT=1` for minimal power draw (3-4mA vs hundreds)
+- **Remote Control**: Web interface power controls eliminate need for physical access
 
 ---
 
 ## 📝 Notes
 
-- Core MVP functionality is complete and tested
-- System architecture follows project brief specifications
-- All validation and safety checks are in place
-- Ready for hardware testing and Phase 2 implementation
-- Code is modular and well-structured for future enhancements
+- Core MVP functionality is complete and tested ✅
+- System deployed successfully on Raspberry Pi 5 hardware ✅
+- Kiosk control and remote management working ✅
+- Ready for Phase 2A user features implementation 🚧
+- Priority shift to favorites management and power controls
+- Wi-Fi pre-provisioning needed for plug-and-play deployment
+- Code is modular and well-structured for feature additions
 
 ---
 
@@ -280,6 +320,10 @@ http://fireplace.local:8080
 - ✅ Clean, maintainable code structure
 - ✅ Comprehensive documentation
 - ✅ Basic test coverage
+- ✅ **Successful Raspberry Pi 5 deployment**
+- ✅ **Remote kiosk start/stop controls**
+- ✅ **Auto-start services working**
+- ✅ **Cross-platform video serving**
 
 ---
 
