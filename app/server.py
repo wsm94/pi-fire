@@ -309,7 +309,7 @@ def stop_kiosk():
         import subprocess
         # Stop the kiosk service
         result = subprocess.run(
-            ['sudo', 'systemctl', 'stop', 'fire-kiosk.service'],
+            ['/usr/bin/sudo', '/usr/bin/systemctl', 'stop', 'fire-kiosk.service'],
             capture_output=True,
             text=True,
             timeout=5
@@ -335,7 +335,7 @@ def start_kiosk():
         import subprocess
         # Start the kiosk service
         result = subprocess.run(
-            ['sudo', 'systemctl', 'start', 'fire-kiosk.service'],
+            ['/usr/bin/sudo', '/usr/bin/systemctl', 'start', 'fire-kiosk.service'],
             capture_output=True,
             text=True,
             timeout=5
@@ -360,7 +360,7 @@ def kiosk_status():
     try:
         import subprocess
         result = subprocess.run(
-            ['systemctl', 'is-active', 'fire-kiosk.service'],
+            ['/usr/bin/systemctl', 'is-active', 'fire-kiosk.service'],
             capture_output=True,
             text=True,
             timeout=5
