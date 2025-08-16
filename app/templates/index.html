@@ -258,33 +258,6 @@
             background: #f57c00;
         }
         
-        .countdown-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.8);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-        }
-        
-        .countdown-content {
-            background: #2a2a2a;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            border: 2px solid #ff6b35;
-        }
-        
-        .countdown-timer {
-            font-size: 48px;
-            font-weight: bold;
-            color: #ff6b35;
-            margin: 20px 0;
-        }
     </style>
 </head>
 <body>
@@ -306,18 +279,6 @@
                     <span>Shutdown System</span>
                 </div>
             </div>
-        </div>
-    </div>
-    
-    <!-- Countdown Overlay -->
-    <div class="countdown-overlay" id="countdown-overlay">
-        <div class="countdown-content">
-            <h2 id="countdown-title">System Shutdown</h2>
-            <div class="countdown-timer" id="countdown-timer">60</div>
-            <p id="countdown-message">System will shutdown in:</p>
-            <button onclick="cancelShutdown()" style="background: #4caf50; color: white; border: none; padding: 15px 30px; border-radius: 5px; cursor: pointer; font-size: 16px;">
-                Cancel
-            </button>
         </div>
     </div>
     
@@ -790,11 +751,8 @@
             }
         });
         
-        let countdownInterval = null;
-        let countdownSeconds = 60;
-        
         async function systemShutdown() {
-            if (!confirm('⚠️ SHUTDOWN SYSTEM?\n\nThis will turn off the Raspberry Pi completely.\nYou will need to physically power it back on.\n\nContinue?')) {
+            if (!confirm('⚠️ SHUTDOWN SYSTEM?\n\nThis will turn off the Raspberry Pi immediately.\nYou will need to physically power it back on.\n\nContinue?')) {
                 return;
             }
             
@@ -806,8 +764,7 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    showCountdown('Shutdown', 'System will shutdown in:', result.countdown || 60);
-                    showMessage('System shutdown initiated');
+                    showMessage('System shutdown initiated - device will power off');
                 } else {
                     showMessage('Failed to shutdown: ' + (result.error || 'Unknown error'), 'error');
                 }
@@ -820,7 +777,7 @@
         }
         
         async function systemReboot() {
-            if (!confirm('🔄 REBOOT SYSTEM?\n\nThis will restart the Raspberry Pi.\nThe system will be back online in about 2-3 minutes.\n\nContinue?')) {
+            if (!confirm('🔄 REBOOT SYSTEM?\n\nThis will restart the Raspberry Pi immediately.\nThe system will be back online in about 2-3 minutes.\n\nContinue?')) {
                 return;
             }
             
@@ -832,8 +789,7 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    showCountdown('Reboot', 'System will reboot in:', result.countdown || 60);
-                    showMessage('System reboot initiated');
+                    showMessage('System reboot initiated - device will restart');
                 } else {
                     showMessage('Failed to reboot: ' + (result.error || 'Unknown error'), 'error');
                 }
@@ -843,54 +799,6 @@
             
             // Close hamburger menu
             document.getElementById('hamburger-dropdown').classList.remove('show');
-        }
-        
-        function showCountdown(action, message, seconds) {
-            countdownSeconds = seconds;
-            
-            document.getElementById('countdown-title').textContent = `System ${action}`;
-            document.getElementById('countdown-message').textContent = message;
-            document.getElementById('countdown-timer').textContent = countdownSeconds;
-            document.getElementById('countdown-overlay').style.display = 'flex';
-            
-            // Start countdown
-            countdownInterval = setInterval(() => {
-                countdownSeconds--;
-                document.getElementById('countdown-timer').textContent = countdownSeconds;
-                
-                if (countdownSeconds <= 0) {
-                    clearInterval(countdownInterval);
-                    document.getElementById('countdown-overlay').style.display = 'none';
-                    showMessage(`${action} in progress...`);
-                }
-            }, 1000);
-        }
-        
-        async function cancelShutdown() {
-            try {
-                const response = await fetch('/api/system/cancel-shutdown', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'}
-                });
-                const result = await response.json();
-                
-                if (result.success) {
-                    // Clear countdown
-                    if (countdownInterval) {
-                        clearInterval(countdownInterval);
-                        countdownInterval = null;
-                    }
-                    
-                    // Hide overlay
-                    document.getElementById('countdown-overlay').style.display = 'none';
-                    
-                    showMessage('Shutdown/reboot cancelled');
-                } else {
-                    showMessage('Failed to cancel: ' + (result.error || 'Unknown error'), 'error');
-                }
-            } catch (error) {
-                showMessage('Error cancelling: ' + error.message, 'error');
-            }
         }
         
         // Initialize UI

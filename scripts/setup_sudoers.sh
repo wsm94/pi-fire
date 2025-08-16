@@ -19,9 +19,8 @@ fireplace ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart fire-kiosk.service
 fireplace ALL=(ALL) NOPASSWD: /usr/bin/systemctl status fire-kiosk.service
 
 # Allow fireplace user to control system power without password
-fireplace ALL=(ALL) NOPASSWD: /usr/sbin/shutdown -h +[0-9]*
-fireplace ALL=(ALL) NOPASSWD: /usr/sbin/shutdown -r +[0-9]*
-fireplace ALL=(ALL) NOPASSWD: /usr/sbin/shutdown -c
+fireplace ALL=(ALL) NOPASSWD: /usr/sbin/shutdown -h now
+fireplace ALL=(ALL) NOPASSWD: /usr/sbin/shutdown -r now
 
 # Also allow the main user (will) to control services and power
 will ALL=(ALL) NOPASSWD: /usr/bin/systemctl stop fire-kiosk.service
@@ -32,9 +31,8 @@ will ALL=(ALL) NOPASSWD: /usr/bin/systemctl stop fire-web.service
 will ALL=(ALL) NOPASSWD: /usr/bin/systemctl start fire-web.service
 will ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart fire-web.service
 will ALL=(ALL) NOPASSWD: /usr/bin/systemctl status fire-web.service
-will ALL=(ALL) NOPASSWD: /usr/sbin/shutdown -h +[0-9]*
-will ALL=(ALL) NOPASSWD: /usr/sbin/shutdown -r +[0-9]*
-will ALL=(ALL) NOPASSWD: /usr/sbin/shutdown -c
+will ALL=(ALL) NOPASSWD: /usr/sbin/shutdown -h now
+will ALL=(ALL) NOPASSWD: /usr/sbin/shutdown -r now
 EOF
 
 # Set correct permissions
