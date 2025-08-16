@@ -19,9 +19,9 @@ StandardError=journal
 MemoryMax=256M
 CPUQuota=50%
 
-# Security
-NoNewPrivileges=true
-ProtectSystem=strict
+# Security (relaxed to allow sudo for kiosk control)
+NoNewPrivileges=false
+ProtectSystem=false
 ProtectHome=true
 ReadWritePaths=/opt/fireplace
 PrivateTmp=true
