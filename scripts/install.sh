@@ -96,13 +96,22 @@ else
     echo "Power management script not found, skipping..."
 fi
 
+# Setup uBlock Origin for ad blocking
+echo "Setting up uBlock Origin..."
+if [ -f "scripts/setup_ublock_origin.sh" ]; then
+    bash scripts/setup_ublock_origin.sh
+else
+    echo "uBlock Origin setup script not found, skipping..."
+fi
+
 echo "✅ Fireplace Pi installation completed!"
 echo ""
 echo "Next steps:"
 echo "1. Add some video files to $FIREPLACE_DIR/videos/"
 echo "2. Install systemd services: sudo ./scripts/enable.sh"
 echo "3. Configure sudo permissions: sudo ./scripts/setup_sudoers.sh"
-echo "4. Access the control interface at http://$(hostname).local:8080"
+echo "4. Setup scheduled shutdown: sudo ./scripts/setup_scheduled_shutdown.sh"
+echo "5. Access the control interface at http://$(hostname).local:8080"
 echo ""
 echo "For development/testing:"
 echo "cd $FIREPLACE_DIR && source venv/bin/activate && python app/server.py"

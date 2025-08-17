@@ -66,10 +66,10 @@ class ChromiumManager:
         self.process = None
         self.current_target = None
         self.profile_dir = "/opt/fireplace/chromium-profile"
-        self.user_data_dir = Path.home() / ".fireplace-chromium"
+        self.user_data_dir = Path(self.profile_dir)
         
     def get_chromium_flags(self) -> list:
-        return [
+        flags = [
             'chromium-browser',
             '--kiosk',
             '--noerrdialogs',
@@ -79,12 +79,31 @@ class ChromiumManager:
             '--start-fullscreen',
             '--overscroll-history-navigation=0',
             '--disable-features=TranslateUI',
-            '--disable-component-update',
             '--disable-background-timer-throttling',
             f'--user-data-dir={self.user_data_dir}',
             '--no-sandbox',
-            '--disable-dev-shm-usage'
+            '--disable-dev-shm-usage',
+            '--disable-web-security',
+            '--disable-extensions-except',
+            '--disable-default-apps'
         ]
+        
+        # Add extension loading if uBlock Origin is available
+        ublock_id = "cjpalhdlnbpafiamejdnhcphjbkeiagm"
+        extensions_dir = self.user_data_dir / "Default" / "Extensions" / ublock_id
+        
+        if extensions_dir.exists():
+            # Find the latest version directory
+            try:
+                version_dirs = [d for d in extensions_dir.iterdir() if d.is_dir()]
+                if version_dirs:
+                    latest_version = sorted(version_dirs, key=lambda x: x.name)[-1]
+                    flags.append(f'--load-extension={latest_version}')
+                    logger.info(f"Loading uBlock Origin extension: {latest_version}")
+            except Exception as e:
+                logger.warning(f"Could not load uBlock Origin extension: {e}")
+        
+        return flags
     
     def launch(self, target_url: str) -> bool:
         if self.is_running() and self.current_target == target_url:

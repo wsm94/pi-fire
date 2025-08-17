@@ -1,58 +1,185 @@
-# Fireplace Pi 🔥
+# 🔥 Fireplace Pi
 
-A Raspberry Pi kiosk system that displays fireplace videos with mobile control, automatic online/offline switching, and smooth transitions.
+Transform your Raspberry Pi into a beautiful, remotely-controlled fireplace display with automatic YouTube and offline video playback, ad blocking, and smart power management.
 
-## Features
+## ✨ Features
 
-- **Full-screen fireplace display** - Chromium kiosk mode with YouTube or local videos
-- **Mobile control** - Web interface accessible at `http://fireplace.local:8080`
-- **Automatic failover** - Switches to offline mode when internet is down
-- **YouTube integration** - Paste any YouTube URL or use presets
-- **Local video support** - MP4, WebM, MKV, AVI, MOV files
-- **Smooth transitions** - Cross-fade between videos
-- **Volume control** - Adjustable volume and mute
-- **State persistence** - Remembers settings across reboots
+- 🔥 **Dual Mode Display**: YouTube videos online, local MP4s offline with automatic failover
+- 📱 **Mobile Control**: Full web interface accessible from any device on your network
+- ⭐ **Favorites System**: Save and quickly access your preferred fireplace videos
+- 🚫 **Ad-free Experience**: Built-in uBlock Origin blocks YouTube ads automatically
+- ⏰ **Scheduled Shutdown**: Automatic daily shutdown (default 2 AM, configurable)
+- 🔌 **Smart Power Management**: Minimal standby power, auto-boot on power restore
+- 🌐 **Easy Deployment**: Wi-Fi pre-provisioning for headless setup
+- 🎯 **Kiosk Mode**: Fullscreen display with auto-recovery and remote control
 
-## Quick Start
+## 🚀 Quick Setup
 
-### Development/Testing
+### Method 1: One-Command Install (Recommended)
 
-1. **Clone and setup**:
-   ```bash
-   git clone <this-repo>
-   cd pi-fire
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   ```
+```bash
+# Clone and install everything automatically
+git clone https://github.com/your-username/pi-fire.git
+cd pi-fire
+sudo ./scripts/full_setup.sh
+```
 
-2. **Run the control server**:
-   ```bash
-   python app/server.py
-   ```
+This installs everything: dependencies, services, ad blocking, power management, and more!
 
-3. **Access the control interface**:
-   Open `http://localhost:8080` in your browser
+### Method 2: Manual Installation
 
-### Raspberry Pi Installation
+```bash
+# Clone repository
+git clone https://github.com/your-username/pi-fire.git
+cd pi-fire
 
-1. **Install system**:
-   ```bash
-   sudo ./scripts/install.sh
-   ```
+# Install core system
+sudo ./scripts/install.sh
 
-2. **Enable services**:
-   ```bash
-   sudo ./scripts/enable.sh
-   ```
+# Enable services and configure features
+sudo ./scripts/enable.sh
+sudo ./scripts/setup_sudoers.sh
+sudo ./scripts/setup_scheduled_shutdown.sh
+sudo ./scripts/setup_ublock_origin.sh
+```
 
-3. **Add videos** (optional):
-   ```bash
-   sudo cp your-video.mp4 /opt/fireplace/videos/
-   ```
+### Method 3: Pre-provisioned SD Card
 
-4. **Access control**:
-   Open `http://fireplace.local:8080` from any device on the same network
+For headless deployment, pre-configure an SD card with Wi-Fi:
+
+```bash
+# On your computer with SD card inserted
+sudo ./scripts/preprovision_sd_card.sh
+```
+
+## 📱 Web Interface
+
+Access the control interface at:
+- `http://fireplace.local:8080` (mDNS)
+- `http://[pi-ip-address]:8080` (direct IP)
+
+### Main Features:
+- **Mode Toggle**: Switch between YouTube and offline videos
+- **YouTube Control**: Paste any YouTube fireplace video URL
+- **Video Library**: Select from local MP4 files
+- **Favorites**: ⭐ Save current video for quick access
+- **Volume Control**: Adjust audio levels
+- **Power Menu**: ☰ Shutdown, reboot, schedule settings
+
+## 🎬 Adding Videos
+
+### Local Videos (Offline Mode)
+```bash
+# Copy MP4 files to the videos directory
+sudo cp your-fireplace-video.mp4 /opt/fireplace/videos/
+sudo chown fireplace:fireplace /opt/fireplace/videos/*.mp4
+```
+
+### YouTube Videos (Online Mode)
+1. Find a fireplace video on YouTube
+2. Copy the URL
+3. Paste it in the web interface
+4. Click ⭐ to save as favorite
+
+**Recommended Sources:**
+- [Archive.org Fireplace Collection](https://archive.org/search.php?query=fireplace)
+- YouTube searches: "fireplace 4k", "crackling fire", "cozy fireplace"
+
+## ⚙️ Configuration
+
+### Scheduled Shutdown
+- Access via ☰ → Scheduled Shutdown
+- Default: 2:00 AM daily
+- Options: Weekdays only, custom time
+
+### Wi-Fi Networks
+```bash
+# Add/configure networks for deployment
+sudo ./scripts/configure_wifi.sh
+```
+
+### Power Management
+- **Auto-boot**: Pi automatically starts when power applied
+- **Safe shutdown**: Use web interface or `sudo shutdown -h now`
+- **Minimal standby**: 3-4mA power draw when shutdown
+
+### Kiosk Controls
+```bash
+# Start/stop fullscreen display
+sudo systemctl start fire-kiosk.service
+sudo systemctl stop fire-kiosk.service
+
+# Or use web interface: ☰ → Start/Stop Kiosk
+```
+
+## 🛠️ Hardware Setup
+
+### Recommended Hardware
+- **Raspberry Pi 5** (or Pi 4 4GB+)
+- **MicroSD Card**: 16GB+ Class 10
+- **Display**: HDMI monitor/TV
+- **Power**: Official Pi power supply
+- **Case**: Optional, with good ventilation
+
+### Display Connection
+1. Connect Pi to display via HDMI
+2. Power on Pi (auto-boots to desktop)
+3. Kiosk mode goes fullscreen automatically
+
+## 🚨 Troubleshooting
+
+### Can't Access Web Interface
+```bash
+# Check service status
+sudo systemctl status fire-web.service
+
+# Try IP address instead of hostname
+ip addr show wlan0
+```
+
+### No Video Playback
+```bash
+# Check video files
+ls -la /opt/fireplace/videos/
+
+# Verify permissions
+sudo chown -R fireplace:fireplace /opt/fireplace/videos/
+```
+
+### Kiosk Not Starting
+```bash
+# Check kiosk service
+sudo systemctl status fire-kiosk.service
+
+# View logs
+sudo journalctl -u fire-kiosk.service -f
+```
+
+### Network Issues
+```bash
+# Reconfigure Wi-Fi
+sudo ./scripts/configure_wifi.sh
+
+# Check network status
+nmcli con show
+```
+
+## 📚 Documentation
+
+- [Deployment Guide](docs/DEPLOYMENT_GUIDE.md) - Detailed setup instructions
+- [Project Brief](docs/project-brief.md) - Technical architecture
+
+## 🔧 Development
+
+```bash
+# Development mode
+cd /opt/fireplace
+source venv/bin/activate
+python app/server.py
+
+# Run tests
+python tests/test_basic.py
+```
 
 ## Architecture
 
