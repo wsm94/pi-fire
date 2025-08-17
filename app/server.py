@@ -581,6 +581,111 @@ def reboot_system():
         logger.error(f"Error initiating reboot: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
+@app.route('/api/scheduled-shutdown', methods=['GET'])
+def get_scheduled_shutdown():
+    """Get scheduled shutdown configuration"""
+    state = state_manager.load_state()
+    schedule = state.get('scheduled_shutdown', {
+        'enabled': False,
+        'time': '02:00',
+        'weekdays_only': False
+    })
+    return jsonify({"success": True, "schedule": schedule})
+
+@app.route('/api/scheduled-shutdown', methods=['POST'])
+def set_scheduled_shutdown():
+    """Update scheduled shutdown configuration"""
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Configuration data required"}), 400
+    
+    # Validate the configuration
+    schedule = {}
+    
+    # Validate enabled flag
+    if 'enabled' in data:
+        if not isinstance(data['enabled'], bool):
+            return jsonify({"error": "Enabled must be true or false"}), 400
+        schedule['enabled'] = data['enabled']
+    
+    # Validate time format
+    if 'time' in data:
+        time_str = data['time']
+        if not isinstance(time_str, str):
+            return jsonify({"error": "Time must be a string"}), 400
+        
+        # Validate HH:MM format
+        try:
+            from datetime import datetime
+            datetime.strptime(time_str, '%H:%M')
+            schedule['time'] = time_str
+        except ValueError:
+            return jsonify({"error": "Time must be in HH:MM format (24-hour)"}), 400
+    
+    # Validate weekdays_only flag
+    if 'weekdays_only' in data:
+        if not isinstance(data['weekdays_only'], bool):
+            return jsonify({"error": "Weekdays_only must be true or false"}), 400
+        schedule['weekdays_only'] = data['weekdays_only']
+    
+    # Get current configuration and update with new values
+    state = state_manager.load_state()
+    current_schedule = state.get('scheduled_shutdown', {})
+    current_schedule.update(schedule)
+    
+    # Save updated configuration
+    if state_manager.update_field('scheduled_shutdown', current_schedule):
+        logger.info(f"Scheduled shutdown updated: {current_schedule}")
+        
+        # Update systemd timer if time changed
+        if 'time' in schedule:
+            update_systemd_timer(schedule['time'])
+        
+        return jsonify({"success": True, "schedule": current_schedule})
+    
+    return jsonify({"error": "Failed to save scheduled shutdown configuration"}), 500
+
+def update_systemd_timer(time_str):
+    """Update the systemd timer with new schedule time"""
+    try:
+        import subprocess
+        
+        # Create new timer content
+        timer_content = f"""[Unit]
+Description=Fireplace Scheduled Shutdown Timer
+Requires=fireplace-scheduled-shutdown.service
+
+[Timer]
+OnCalendar=*-*-* {time_str}:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+"""
+        
+        # Write to timer file (requires appropriate permissions)
+        timer_file = "/etc/systemd/system/fireplace-scheduled-shutdown.timer"
+        
+        # Use sudo to write the file
+        result = subprocess.run(
+            ['/usr/bin/sudo', 'tee', timer_file],
+            input=timer_content,
+            text=True,
+            capture_output=True,
+            timeout=5
+        )
+        
+        if result.returncode == 0:
+            # Reload systemd and restart timer
+            subprocess.run(['/usr/bin/sudo', 'systemctl', 'daemon-reload'], timeout=5)
+            subprocess.run(['/usr/bin/sudo', 'systemctl', 'restart', 'fireplace-scheduled-shutdown.timer'], timeout=5)
+            logger.info(f"Updated systemd timer for {time_str}")
+        else:
+            logger.error(f"Failed to update systemd timer: {result.stderr}")
+            
+    except Exception as e:
+        logger.error(f"Error updating systemd timer: {e}")
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)

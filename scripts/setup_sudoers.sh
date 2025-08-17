@@ -22,6 +22,14 @@ fireplace ALL=(ALL) NOPASSWD: /usr/bin/systemctl status fire-kiosk.service
 fireplace ALL=(ALL) NOPASSWD: /usr/sbin/shutdown -h *
 fireplace ALL=(ALL) NOPASSWD: /usr/sbin/shutdown -r *
 
+# Allow fireplace user to manage scheduled shutdown systemd services
+fireplace ALL=(ALL) NOPASSWD: /usr/bin/tee /etc/systemd/system/fireplace-scheduled-shutdown.timer
+fireplace ALL=(ALL) NOPASSWD: /usr/bin/systemctl daemon-reload
+fireplace ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart fireplace-scheduled-shutdown.timer
+fireplace ALL=(ALL) NOPASSWD: /usr/bin/systemctl stop fireplace-scheduled-shutdown.timer
+fireplace ALL=(ALL) NOPASSWD: /usr/bin/systemctl enable fireplace-scheduled-shutdown.timer
+fireplace ALL=(ALL) NOPASSWD: /usr/bin/systemctl disable fireplace-scheduled-shutdown.timer
+
 # Also allow the main user (will) to control services and power
 will ALL=(ALL) NOPASSWD: /usr/bin/systemctl stop fire-kiosk.service
 will ALL=(ALL) NOPASSWD: /usr/bin/systemctl start fire-kiosk.service

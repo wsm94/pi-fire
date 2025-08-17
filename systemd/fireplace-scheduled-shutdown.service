@@ -1,0 +1,18 @@
+[Unit]
+Description=Fireplace Scheduled Shutdown Service
+Requires=fire-web.service
+
+[Service]
+Type=oneshot
+User=fireplace
+Group=fireplace
+WorkingDirectory=/opt/fireplace
+Environment=PATH=/opt/fireplace/venv/bin
+ExecStart=/opt/fireplace/venv/bin/python /opt/fireplace/app/scheduled_shutdown.py
+
+# Security
+NoNewPrivileges=false
+ProtectSystem=false
+ProtectHome=true
+ReadWritePaths=/opt/fireplace
+PrivateTmp=true

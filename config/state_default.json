@@ -12,5 +12,10 @@
   "active_playlist": "default",
   "show_status_overlay": false,
   "user_favorites": [],
+  "scheduled_shutdown": {
+    "enabled": false,
+    "time": "02:00",
+    "weekdays_only": false
+  },
   "version": "1.0"
 }

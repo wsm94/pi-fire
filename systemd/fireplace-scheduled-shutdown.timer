@@ -1,0 +1,10 @@
+[Unit]
+Description=Fireplace Scheduled Shutdown Timer
+Requires=fireplace-scheduled-shutdown.service
+
+[Timer]
+OnCalendar=*-*-* 02:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -88,12 +88,21 @@ fi
 chown "$SERVICE_USER:$SERVICE_USER" "$FIREPLACE_DIR/state.json"
 chown "$SERVICE_USER:$SERVICE_USER" "$FIREPLACE_DIR/videos/README.md"
 
+# Configure power management for Pi 5
+echo "Configuring power management..."
+if [ -f "scripts/configure_power_management.sh" ]; then
+    bash scripts/configure_power_management.sh
+else
+    echo "Power management script not found, skipping..."
+fi
+
 echo "✅ Fireplace Pi installation completed!"
 echo ""
 echo "Next steps:"
 echo "1. Add some video files to $FIREPLACE_DIR/videos/"
 echo "2. Install systemd services: sudo ./scripts/enable.sh"
-echo "3. Access the control interface at http://$(hostname).local:8080"
+echo "3. Configure sudo permissions: sudo ./scripts/setup_sudoers.sh"
+echo "4. Access the control interface at http://$(hostname).local:8080"
 echo ""
 echo "For development/testing:"
 echo "cd $FIREPLACE_DIR && source venv/bin/activate && python app/server.py"
