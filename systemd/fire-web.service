@@ -5,6 +5,8 @@ Wants=network-online.target
 
 [Service]
 Type=simple
+# User will be set during installation based on actual system user
+# Default: User=fireplace, but should be changed to actual user during setup
 User=fireplace
 Group=fireplace
 WorkingDirectory=/opt/fireplace
@@ -24,6 +26,7 @@ NoNewPrivileges=false
 ProtectSystem=false
 ProtectHome=true
 ReadWritePaths=/opt/fireplace
+# Note: User should match the kiosk service user to avoid permission issues
 PrivateTmp=true
 
 [Install]

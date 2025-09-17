@@ -5,13 +5,17 @@ Wants=fire-web.service
 
 [Service]
 Type=simple
-User=will
-Group=will
+# User will be set during installation based on actual system user
+# Default: User=fireplace, but should be changed to actual user during setup
+User=fireplace
+Group=fireplace
 WorkingDirectory=/opt/fireplace
 Environment="PATH=/opt/fireplace/venv/bin:/usr/bin:/bin"
 Environment="DISPLAY=:0"
-Environment="XAUTHORITY=/home/will/.Xauthority"
-Environment="HOME=/home/will"
+# These paths will be set during installation based on actual user
+# Environment="XAUTHORITY=/home/[USER]/.Xauthority"
+# Environment="HOME=/home/[USER]"
+# For now, let the watcher.py auto-detect these paths
 
 # Use the launch script which handles environment setup
 ExecStart=/opt/fireplace/scripts/launch_kiosk.sh
