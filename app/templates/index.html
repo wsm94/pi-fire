@@ -554,8 +554,10 @@
         </div>
     </div>
     
+    <script type="application/json" id="state-data">{{ state | tojson | safe }}</script>
     <script>
-        let currentState = {{ state | tojson }};
+        // Initialize current state from Flask template
+        let currentState = JSON.parse(document.getElementById('state-data').textContent);
         
         function showMessage(message, type = 'success') {
             const container = document.getElementById('message-container');
