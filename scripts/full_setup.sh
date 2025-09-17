@@ -82,7 +82,7 @@ run_step() {
 # Create log file
 echo "Fireplace Pi Installation Log - $(date)" > /tmp/fireplace_install.log
 
-TOTAL_STEPS=12
+TOTAL_STEPS=11
 CURRENT_STEP=0
 
 # Step 1: Update system
@@ -109,11 +109,7 @@ run_step $CURRENT_STEP $TOTAL_STEPS "Configuring scheduled shutdown" "./scripts/
 CURRENT_STEP=$((CURRENT_STEP + 1))
 run_step $CURRENT_STEP $TOTAL_STEPS "Optimizing power management" "./scripts/configure_power_management.sh"
 
-# Step 7: Setup uBlock Origin
-CURRENT_STEP=$((CURRENT_STEP + 1))
-run_step $CURRENT_STEP $TOTAL_STEPS "Installing ad blocker" "./scripts/setup_ublock_origin.sh"
-
-# Step 8: Configure Wi-Fi (interactive)
+# Step 7: Configure Wi-Fi (interactive)
 CURRENT_STEP=$((CURRENT_STEP + 1))
 show_progress $CURRENT_STEP $TOTAL_STEPS "Configuring Wi-Fi networks"
 echo ""
@@ -129,15 +125,15 @@ else
     echo "Skipping Wi-Fi configuration (can be done later)"
 fi
 
-# Step 9: Start services
+# Step 8: Start services
 CURRENT_STEP=$((CURRENT_STEP + 1))
 run_step $CURRENT_STEP $TOTAL_STEPS "Starting web service" "systemctl start fire-web.service"
 
-# Step 10: Check service status
+# Step 9: Check service status
 CURRENT_STEP=$((CURRENT_STEP + 1))
 run_step $CURRENT_STEP $TOTAL_STEPS "Verifying web service" "systemctl is-active fire-web.service"
 
-# Step 11: Add sample content
+# Step 10: Add sample content
 CURRENT_STEP=$((CURRENT_STEP + 1))
 show_progress $CURRENT_STEP $TOTAL_STEPS "Setting up sample content"
 echo ""
@@ -185,7 +181,7 @@ To add fireplace videos:
 EOF
 fi
 
-# Step 12: Final verification
+# Step 11: Final verification
 CURRENT_STEP=$((CURRENT_STEP + 1))
 run_step $CURRENT_STEP $TOTAL_STEPS "Final system verification" "curl -s http://localhost:8080 > /dev/null"
 
@@ -220,7 +216,6 @@ echo "  ✅ Mobile/laptop remote control"
 echo "  ✅ Favorites management"
 echo "  ✅ Power controls (shutdown/reboot)"
 echo "  ✅ Scheduled shutdown (configurable)"
-echo "  ✅ Ad blocking (uBlock Origin)"
 echo "  ✅ Power management optimization"
 echo "  ✅ Auto-start on boot"
 echo ""
@@ -234,7 +229,6 @@ echo ""
 
 echo -e "${BLUE}Troubleshooting:${NC}"
 echo "  View logs: sudo journalctl -u fire-web.service -f"
-echo "  Test uBlock: sudo -u fireplace /opt/fireplace/test-ublock.sh"
 echo "  Wi-Fi setup: sudo ./scripts/configure_wifi.sh"
 echo ""
 

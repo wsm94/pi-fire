@@ -96,14 +96,6 @@ else
     echo "Power management script not found, skipping..."
 fi
 
-# Setup uBlock Origin for ad blocking
-echo "Setting up uBlock Origin..."
-if [ -f "scripts/setup_ublock_origin.sh" ]; then
-    bash scripts/setup_ublock_origin.sh
-else
-    echo "uBlock Origin setup script not found, skipping..."
-fi
-
 echo "✅ Fireplace Pi installation completed!"
 echo ""
 echo "Next steps:"

@@ -7,7 +7,6 @@ Transform your Raspberry Pi into a beautiful, remotely-controlled fireplace disp
 - 🔥 **Dual Mode Display**: YouTube videos online, local MP4s offline with automatic failover
 - 📱 **Mobile Control**: Full web interface accessible from any device on your network
 - ⭐ **Favorites System**: Save and quickly access your preferred fireplace videos
-- 🚫 **Ad-free Experience**: Built-in uBlock Origin blocks YouTube ads automatically
 - ⏰ **Scheduled Shutdown**: Automatic daily shutdown (default 2 AM, configurable)
 - 🔌 **Smart Power Management**: Minimal standby power, auto-boot on power restore
 - 🌐 **Easy Deployment**: Wi-Fi pre-provisioning for headless setup
@@ -40,7 +39,6 @@ sudo ./scripts/install.sh
 sudo ./scripts/enable.sh
 sudo ./scripts/setup_sudoers.sh
 sudo ./scripts/setup_scheduled_shutdown.sh
-sudo ./scripts/setup_ublock_origin.sh
 ```
 
 ### Method 3: Pre-provisioned SD Card
