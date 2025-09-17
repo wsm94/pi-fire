@@ -101,19 +101,50 @@ class ChromiumManager:
         
         try:
             logger.info(f"Launching Chromium with target: {target_url}")
+
+            # Add environment variables for display access
+            env = os.environ.copy()
+            env['DISPLAY'] = ':0'
+            # Try to detect the correct user's home directory
+            # This will work for both 'pi' and 'will' users
+            import pwd
+            try:
+                user_home = pwd.getpwuid(os.getuid()).pw_dir
+                env['XAUTHORITY'] = f'{user_home}/.Xauthority'
+            except:
+                # Fallback to common locations
+                if os.path.exists('/home/will/.Xauthority'):
+                    env['XAUTHORITY'] = '/home/will/.Xauthority'
+                elif os.path.exists('/home/pi/.Xauthority'):
+                    env['XAUTHORITY'] = '/home/pi/.Xauthority'
+                else:
+                    env['XAUTHORITY'] = os.path.expanduser('~/.Xauthority')
+
+            logger.debug(f"Using XAUTHORITY: {env.get('XAUTHORITY')}")
+
             self.process = subprocess.Popen(
                 flags,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                env=env,
                 preexec_fn=os.setsid if hasattr(os, 'setsid') else None
             )
             self.current_target = target_url
             time.sleep(2)  # Give Chromium time to start
-            
+
             if self.is_running():
                 logger.info(f"Chromium started successfully (PID: {self.process.pid})")
                 return True
             else:
+                # Try to capture any error output
+                try:
+                    stdout, stderr = self.process.communicate(timeout=0.5)
+                    if stderr:
+                        logger.error(f"Chromium failed to start. Stderr: {stderr.decode()[:500]}")
+                    if stdout:
+                        logger.debug(f"Chromium stdout: {stdout.decode()[:500]}")
+                except:
+                    pass
                 logger.error("Chromium failed to start")
                 return False
                 
