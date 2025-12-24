@@ -67,7 +67,8 @@ class ChromiumManager:
         self.current_target = None
         self.profile_dir = "/opt/fireplace/chromium-profile"
         self.user_data_dir = Path(self.profile_dir)
-        
+        self.is_youtube_url = False
+
     def get_chromium_flags(self) -> list:
         flags = [
             'chromium-browser',
@@ -130,10 +131,16 @@ class ChromiumManager:
                 preexec_fn=os.setsid if hasattr(os, 'setsid') else None
             )
             self.current_target = target_url
+            self.is_youtube_url = 'youtube.com' in target_url
             time.sleep(2)  # Give Chromium time to start
 
             if self.is_running():
                 logger.info(f"Chromium started successfully (PID: {self.process.pid})")
+
+                # If YouTube, automate play and fullscreen using xdotool
+                if self.is_youtube_url:
+                    self._automate_youtube_playback(env)
+
                 return True
             else:
                 # Try to capture any error output
@@ -195,11 +202,71 @@ class ChromiumManager:
             return self.launch(target)
         return False
 
+    def _automate_youtube_playback(self, env: dict):
+        """Use xdotool to automate YouTube play and fullscreen."""
+        try:
+            # Wait for YouTube page to fully load
+            logger.info("Waiting for YouTube to load before automation...")
+            time.sleep(5)
+
+            # Click in the center of the screen to focus the video player
+            # Then press 'k' to play and 'f' for fullscreen
+            xdotool_env = env.copy()
+
+            # First, click to dismiss any popups and focus the player
+            subprocess.run(
+                ['xdotool', 'mousemove', '--screen', '0', '960', '540', 'click', '1'],
+                env=xdotool_env,
+                timeout=5
+            )
+            time.sleep(0.5)
+
+            # Press 'k' to play/pause (starts playback)
+            subprocess.run(
+                ['xdotool', 'key', 'k'],
+                env=xdotool_env,
+                timeout=5
+            )
+            time.sleep(0.5)
+
+            # Press 't' to exit theatre mode
+            subprocess.run(
+                ['xdotool', 'key', 't'],
+                env=xdotool_env,
+                timeout=5
+            )
+            time.sleep(5)
+
+            # Press 'f' to enter fullscreen
+            subprocess.run(
+                ['xdotool', 'key', 'f'],
+                env=xdotool_env,
+                timeout=5
+            )
+            time.sleep(0.5)
+
+            # Move mouse to corner to hide it
+            subprocess.run(
+                ['xdotool', 'mousemove', '--screen', '0', '0', '0'],
+                env=xdotool_env,
+                timeout=5
+            )
+
+            logger.info("YouTube automation completed (play + fullscreen)")
+
+        except subprocess.TimeoutExpired:
+            logger.warning("xdotool command timed out")
+        except FileNotFoundError:
+            logger.error("xdotool not installed - run: sudo apt install xdotool")
+        except Exception as e:
+            logger.error(f"YouTube automation failed: {e}")
+
 class FireplaceWatcher:
     def __init__(self):
         self.state_file = "/opt/fireplace/state.json"
-        self.policy_file = "/opt/fireplace/config/policy.json" 
+        self.policy_file = "/opt/fireplace/config/policy.json"
         self.offline_url = "http://localhost:8080/offline"
+        self.youtube_url = "http://localhost:8080/youtube"
         
         # Development paths
         if not Path(self.state_file).exists():
@@ -248,17 +315,13 @@ class FireplaceWatcher:
     
     def get_target_url(self, state: Dict[str, Any]) -> str:
         mode = state.get('mode', 'offline')
-        
+
         if mode == 'online' and state.get('last_online_url'):
-            youtube_config = self.config.get('youtube', {})
-            frontend_base = youtube_config.get('frontend_base')
-            embed_url = URLValidator.build_youtube_embed(
-                state['last_online_url'], 
-                frontend_base
-            )
-            if embed_url:
-                return embed_url
-        
+            # Load YouTube directly (not in iframe) to bypass embed restrictions
+            youtube_url = URLValidator.build_youtube_fullpage_url(state['last_online_url'])
+            if youtube_url:
+                return youtube_url
+
         # Default to offline mode
         return self.offline_url
     

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fireplace</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+        }
+
+        body.hide-cursor {
+            cursor: none;
+        }
+
+        #message {
+            color: #fff;
+            font-family: sans-serif;
+            text-align: center;
+            padding-top: 40vh;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div id="message">Redirecting to YouTube...</div>
+    <script>
+        // Redirect to YouTube directly - Chromium in kiosk mode will handle it
+        window.location.href = "{{ youtube_url }}";
+    </script>
+</body>
+</html>

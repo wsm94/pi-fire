@@ -64,12 +64,27 @@ class URLValidator:
         video_id = URLValidator.extract_youtube_id(url)
         if not video_id:
             return None
-        
+
         if frontend_base:
             return f"{frontend_base.rstrip('/')}/embed/{video_id}?autoplay=1&controls=0&loop=1"
         else:
             params = "autoplay=1&controls=0&rel=0&mute=1&loop=1&modestbranding=1"
             return f"https://www.youtube.com/embed/{video_id}?{params}&playlist={video_id}"
+
+    @staticmethod
+    def build_youtube_fullpage_url(url: str) -> Optional[str]:
+        """Build a YouTube watch URL with autoplay params for fullpage player.
+
+        This is used when embed URLs are blocked (error 153). The fullpage player
+        loads the regular YouTube watch page in an iframe with autoplay.
+        """
+        video_id = URLValidator.extract_youtube_id(url)
+        if not video_id:
+            return None
+
+        # Use regular watch URL with autoplay - this bypasses embed restrictions
+        params = "autoplay=1&mute=1&loop=1&playlist=" + video_id
+        return f"https://www.youtube.com/watch?v={video_id}&{params}"
 
 class FileValidator:
     SUPPORTED_FORMATS = ['.mp4', '.webm', '.mkv', '.avi', '.mov']

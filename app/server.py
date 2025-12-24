@@ -15,6 +15,8 @@ except ImportError:
     # Fall back to direct import (when run as script)
     from validators import ConfigValidator, URLValidator, FileValidator, validate_volume, validate_mode, FavoritesValidator
 
+from urllib.parse import quote
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -395,6 +397,19 @@ def select_favorite():
 @app.route('/offline')
 def offline_player():
     return send_from_directory(Path(__file__).parent / 'offline_player', 'offline.html')
+
+@app.route('/youtube')
+def youtube_player():
+    """Serve YouTube in fullpage mode - bypasses embed restrictions (error 153)"""
+    state = state_manager.load_state()
+    url = state.get('last_online_url')
+
+    if not url or not URLValidator.is_valid_youtube_url(url):
+        # Fallback to a default video if none set
+        url = "https://www.youtube.com/watch?v=L_LUpnjgPso"
+
+    youtube_url = URLValidator.build_youtube_fullpage_url(url)
+    return render_template('youtube_player.html', youtube_url=youtube_url)
 
 @app.route('/static/offline/<path:filename>')
 def offline_static(filename):
